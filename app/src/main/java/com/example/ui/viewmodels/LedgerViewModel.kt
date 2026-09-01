@@ -143,6 +143,10 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
         }
     }
     
+    fun updateRevenueEntry(entry: RevenueEntry) {
+        viewModelScope.launch { repository.updateRevenueEntry(entry) }
+    }
+
     fun deleteRevenue(id: Int) {
         viewModelScope.launch { repository.deleteRevenueEntry(id) }
     }
@@ -162,6 +166,10 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
         }
     }
     
+    fun updateExpenseEntry(entry: ExpenseEntry) {
+        viewModelScope.launch { repository.updateExpenseEntry(entry) }
+    }
+
     fun deleteExpense(id: Int) {
         viewModelScope.launch { repository.deleteExpenseEntry(id) }
     }
@@ -199,6 +207,18 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
     fun hideExpenseCategory(category: ExpenseCategory) {
         viewModelScope.launch {
             repository.updateExpenseCategory(category.copy(isActive = false))
+        }
+    }
+
+    fun updateRevenueSource(source: RevenueSource) {
+        viewModelScope.launch {
+            repository.updateRevenueSource(source)
+        }
+    }
+
+    fun updateExpenseCategory(category: ExpenseCategory) {
+        viewModelScope.launch {
+            repository.updateExpenseCategory(category)
         }
     }
 
@@ -248,6 +268,44 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
             } catch (e: Exception) {
                 e.printStackTrace()
                 onResult(false)
+            }
+        }
+    }
+
+    // Export CSV
+    fun exportCsvData(monthStr: String, onResult: (String?) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val sources = repository.getAllRevenueSources()
+                val categories = repository.getAllExpenseCategories()
+                val revEntries = repository.getRevenueEntriesByMonth(monthStr).first()
+                val expEntries = repository.getExpenseEntriesByMonth(monthStr).first()
+
+                val sourceMap = sources.associateBy { it.id }
+                val categoryMap = categories.associateBy { it.id }
+
+                val sb = java.lang.StringBuilder()
+                // CSV Header
+                sb.append("Loai,Ngay,Nguon/Danh muc,So tien,So cuoc,Km,Gio chay,Ghi chu\n")
+
+                revEntries.forEach { rev ->
+                    val sourceName = sourceMap[rev.sourceId]?.name ?: "Khác"
+                    val date = FormatUtils.formatDate(FormatUtils.parseDbDate(rev.dateString))
+                    val note = rev.note.replace(",", " ")
+                    sb.append("Doanh thu,$date,$sourceName,${rev.amount},${rev.trips},${rev.distanceKm ?: ""},${rev.durationHrs ?: ""},$note\n")
+                }
+
+                expEntries.forEach { exp ->
+                    val catName = categoryMap[exp.categoryId]?.name ?: "Khác"
+                    val date = FormatUtils.formatDate(FormatUtils.parseDbDate(exp.dateString))
+                    val note = exp.note.replace(",", " ")
+                    sb.append("Chi phi,$date,$catName,${exp.amount},,,, $note\n")
+                }
+
+                onResult(sb.toString())
+            } catch (e: Exception) {
+                e.printStackTrace()
+                onResult(null)
             }
         }
     }

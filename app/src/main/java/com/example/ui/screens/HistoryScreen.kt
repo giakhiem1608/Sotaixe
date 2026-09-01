@@ -26,7 +26,6 @@ import com.example.data.RevenueEntry
 import com.example.ui.theme.ColorExpense
 import com.example.ui.viewmodels.LedgerViewModel
 import com.example.utils.FormatUtils
-import java.util.Date
 
 @Composable
 fun HistoryScreen(viewModel: LedgerViewModel) {
@@ -35,6 +34,9 @@ fun HistoryScreen(viewModel: LedgerViewModel) {
     val expenseEntries by viewModel.historyExpenseEntries.collectAsState()
     val sources by viewModel.activeRevenueSources.collectAsState()
     val categories by viewModel.activeExpenseCategories.collectAsState()
+
+    var editingRevenue by remember { mutableStateOf<RevenueEntry?>(null) }
+    var editingExpense by remember { mutableStateOf<ExpenseEntry?>(null) }
 
     // Format current month for display
     val displayMonth = remember(currentMonthStr) {
@@ -87,7 +89,8 @@ fun HistoryScreen(viewModel: LedgerViewModel) {
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(bottom = 80.dp)
             ) {
                 items(datesWithData) { dateStr ->
                     val dayRevenues = revenueEntries.filter { it.dateString == dateStr }
@@ -97,11 +100,45 @@ fun HistoryScreen(viewModel: LedgerViewModel) {
                         revenues = dayRevenues,
                         expenses = dayExpenses,
                         sources = sources,
-                        categories = categories
+                        categories = categories,
+                        onEditRevenue = { editingRevenue = it },
+                        onEditExpense = { editingExpense = it }
                     )
                 }
             }
         }
+    }
+
+    editingRevenue?.let { entry ->
+        EditRevenueSheet(
+            entry = entry,
+            sources = sources,
+            onDismiss = { editingRevenue = null },
+            onSave = { updatedEntry ->
+                viewModel.updateRevenueEntry(updatedEntry)
+                editingRevenue = null
+            },
+            onDelete = {
+                viewModel.deleteRevenue(entry.id)
+                editingRevenue = null
+            }
+        )
+    }
+
+    editingExpense?.let { entry ->
+        EditExpenseSheet(
+            entry = entry,
+            categories = categories,
+            onDismiss = { editingExpense = null },
+            onSave = { updatedEntry ->
+                viewModel.updateExpenseEntry(updatedEntry)
+                editingExpense = null
+            },
+            onDelete = {
+                viewModel.deleteExpense(entry.id)
+                editingExpense = null
+            }
+        )
     }
 }
 
@@ -111,7 +148,9 @@ fun DayHistoryCard(
     revenues: List<RevenueEntry>,
     expenses: List<ExpenseEntry>,
     sources: List<com.example.data.RevenueSource>,
-    categories: List<com.example.data.ExpenseCategory>
+    categories: List<com.example.data.ExpenseCategory>,
+    onEditRevenue: (RevenueEntry) -> Unit,
+    onEditExpense: (ExpenseEntry) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -127,14 +166,13 @@ fun DayHistoryCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             // Header Row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { expanded = !expanded }
                     .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -157,48 +195,101 @@ fun DayHistoryCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
+            }
+
+            // Summary by Source
+            if (revenues.isNotEmpty()) {
+                val breakdown = sources.map { source ->
+                    val sourceRevenues = revenues.filter { it.sourceId == source.id }
+                    val amount = sourceRevenues.sumOf { it.amount }
+                    val trips = sourceRevenues.sumOf { it.trips }
+                    Triple(source, amount, trips)
+                }.filter { it.second > 0 }
+
+                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    breakdown.forEach { (source, amount, trips) ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column {
+                                Text(source.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                                Text("$trips cuốc", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Text(FormatUtils.formatCurrency(amount), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            // Button "Xem giao dịch"
+            TextButton(
+                onClick = { expanded = !expanded },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(if (expanded) "Thu gọn giao dịch" else "Xem giao dịch")
                 Icon(
                     imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    modifier = Modifier.padding(start = 4.dp)
                 )
             }
 
-            // Expanded Content
+            // Expanded Content (Individual Entries)
             AnimatedVisibility(visible = expanded) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                        .padding(16.dp)
                 ) {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.padding(bottom = 8.dp))
-                    
                     if (revenues.isNotEmpty()) {
-                        Text("DOANH THU", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 4.dp))
+                        Text("CHI TIẾT DOANH THU", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 8.dp))
                         revenues.forEach { rev ->
                             val source = sources.find { it.id == rev.sourceId }
                             Row(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onEditRevenue(rev) }
+                                    .padding(vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(source?.name ?: "Nguồn khác", style = MaterialTheme.typography.bodyMedium)
-                                Text(FormatUtils.formatCurrency(rev.amount), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(source?.name ?: "Nguồn khác", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                                    if (rev.note.isNotBlank()) {
+                                        Text(rev.note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(FormatUtils.formatCurrency(rev.amount), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                    Text("${rev.trips} cuốc", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
                             }
                         }
                     }
                     
                     if (expenses.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("CHI PHÍ", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 4.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("CHI TIẾT CHI PHÍ", style = MaterialTheme.typography.labelSmall, color = ColorExpense, modifier = Modifier.padding(bottom = 8.dp))
                         expenses.forEach { exp ->
                             val cat = categories.find { it.id == exp.categoryId }
                             Row(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onEditExpense(exp) }
+                                    .padding(vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(cat?.name ?: "Khác", style = MaterialTheme.typography.bodyMedium)
-                                Text("- ${FormatUtils.formatCurrency(exp.amount)}", style = MaterialTheme.typography.bodyMedium, color = ColorExpense)
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(cat?.name ?: "Khác", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                                    if (exp.note.isNotBlank()) {
+                                        Text(exp.note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                }
+                                Text("- ${FormatUtils.formatCurrency(exp.amount)}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = ColorExpense)
                             }
                         }
                     }

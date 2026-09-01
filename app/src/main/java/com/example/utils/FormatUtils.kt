@@ -15,7 +15,7 @@ object FormatUtils {
     private val dayOfWeekFormat = SimpleDateFormat("EEEE", localeVN)
 
     fun formatCurrency(amount: Long): String {
-        return currencyFormat.format(amount).replace("₫", "đ")
+        return currencyFormat.format(amount).replace("₫", "đ").replace(" ", "").replace(",00", "")
     }
 
     fun formatDate(timestamp: Long): String {

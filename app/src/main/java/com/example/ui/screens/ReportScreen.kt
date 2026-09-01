@@ -196,7 +196,8 @@ fun ReportScreen(viewModel: LedgerViewModel) {
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text("Thống Kê", fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 12.dp))
@@ -249,17 +250,32 @@ fun ReportScreen(viewModel: LedgerViewModel) {
                             if (breakdown.isNotEmpty()) {
                                 val topSource = breakdown.first()
                                 val topPercent = (topSource.second.toFloat() / totalRev.toFloat()) * 100
-                                Text("• ${topSource.first.name} chiếm ${String.format("%.1f", topPercent)}% tổng doanh thu tháng này.", modifier = Modifier.padding(vertical = 4.dp))
+                                Text("• ${topSource.first.name} đang chiếm ${String.format("%.1f", topPercent).replace(".", ",")}% tổng doanh thu tháng này.", modifier = Modifier.padding(vertical = 4.dp))
+
+                                if (breakdown.size >= 2) {
+                                    val secondSource = breakdown[1]
+                                    val firstTrips = revenueEntries.filter { it.sourceId == topSource.first.id }.sumOf { it.trips }
+                                    val secondTrips = revenueEntries.filter { it.sourceId == secondSource.first.id }.sumOf { it.trips }
+                                    val firstAvgTrip = if (firstTrips > 0) topSource.second / firstTrips else 0L
+                                    val secondAvgTrip = if (secondTrips > 0) secondSource.second / secondTrips else 0L
+                                    if (firstAvgTrip > 0 && secondAvgTrip > 0) {
+                                        val diffPercent = ((Math.abs(firstAvgTrip - secondAvgTrip).toFloat() / Math.min(firstAvgTrip, secondAvgTrip).toFloat()) * 100).toInt()
+                                        if (diffPercent > 0) {
+                                            val higher = if (firstAvgTrip > secondAvgTrip) topSource.first.name else secondSource.first.name
+                                            val lower = if (firstAvgTrip > secondAvgTrip) secondSource.first.name else topSource.first.name
+                                            Text("• Doanh thu trung bình/cuốc của $higher cao hơn $lower khoảng $diffPercent%.", modifier = Modifier.padding(vertical = 4.dp))
+                                        }
+                                    }
+                                }
                             }
                             
                             val dates = revenueEntries.groupBy { it.dateString }
-                            if (dates.isNotEmpty()) {
+                            if (dates.size >= 3) {
                                 val topDate = dates.maxByOrNull { it.value.sumOf { r -> r.amount } }
                                 if (topDate != null) {
                                     val topDateTimestamp = FormatUtils.parseDbDate(topDate.key)
                                     val dow = FormatUtils.getDayOfWeek(topDateTimestamp)
-                                    val dateStr = FormatUtils.formatDate(topDateTimestamp)
-                                    Text("• $dow ($dateStr) là ngày có doanh thu cao nhất.", modifier = Modifier.padding(vertical = 4.dp))
+                                    Text("• Gần đây, $dow là ngày có doanh thu tốt nhất.", modifier = Modifier.padding(vertical = 4.dp))
                                 }
                             }
                             
@@ -275,7 +291,7 @@ fun ReportScreen(viewModel: LedgerViewModel) {
                                     val daysLeft = maxDays - currentDay
                                     if (daysLeft > 0) {
                                         val needPerDay = remain / daysLeft
-                                        Text("• Cần trung bình ${FormatUtils.formatCurrency(needPerDay)}/ngày trong $daysLeft ngày còn lại để đạt mục tiêu.", modifier = Modifier.padding(vertical = 4.dp))
+                                        Text("• Còn $daysLeft ngày. Cần trung bình ${FormatUtils.formatCurrency(needPerDay)}/ngày để đạt mục tiêu ${FormatUtils.formatCurrency(goalObj.amount)}.", modifier = Modifier.padding(vertical = 4.dp))
                                     }
                                 }
                             }

@@ -147,6 +147,16 @@ fun TodayScreen(viewModel: LedgerViewModel) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+                
+                if (totalTrips > 0) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    val avgRevenue = totalRevenue / totalTrips
+                    Text(
+                        text = "TB doanh thu/cuốc: ${FormatUtils.formatCurrency(avgRevenue)}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
 
@@ -378,14 +388,14 @@ fun AddRevenueSheet(
                 onClick = {
                     val amount = amountStr.replace(Regex("[^0-9]"), "").toLongOrNull()
                     val trips = tripsStr.toIntOrNull()
-                    if (amount != null && trips != null && selectedSourceId != 0) {
+                    if (amount != null && trips != null && trips >= 1 && selectedSourceId != 0) {
                         onSave(selectedSourceId, amount, trips, null, null, note)
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = amountStr.isNotBlank() && tripsStr.isNotBlank()
+                enabled = amountStr.isNotBlank() && tripsStr.isNotBlank() && (tripsStr.toIntOrNull() ?: 0) >= 1
             ) {
                 Text("LƯU DOANH THU", fontWeight = FontWeight.Bold)
             }
