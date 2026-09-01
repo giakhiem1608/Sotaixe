@@ -75,6 +75,10 @@ class LedgerRepository(private val dao: LedgerDao) {
     suspend fun insertGoal(goal: Goal) {
         dao.insertGoal(goal)
     }
+    
+    suspend fun deleteGoal(goal: Goal) { 
+        dao.deleteGoal(goal) 
+    }
 
     // Statistics
     fun getTotalRevenueByDate(dateString: String): Flow<Long?> {

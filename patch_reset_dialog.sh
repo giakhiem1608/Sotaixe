@@ -1,0 +1,1 @@
+sed -i 's/showRestoreConfirmDialog = true; pendingRestoreUri = Uri.parse("reset_data") \/\/ Wait, this will trigger restore with invalid URI, let'\''s create a new dialog/showResetConfirmDialog1 = true/g' app/src/main/java/com/example/ui/screens/OtherScreen.kt

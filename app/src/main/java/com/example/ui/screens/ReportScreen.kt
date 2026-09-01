@@ -156,7 +156,15 @@ fun ReportScreen(viewModel: LedgerViewModel) {
                                 }
                             },
                             dismissButton = {
-                                TextButton(onClick = { showGoalDialog = false }) { Text("HỦY") }
+                                Row {
+                                    if (goal != null) {
+                                        TextButton(onClick = {
+                                            viewModel.deleteGoal(goal!!)
+                                            showGoalDialog = false
+                                        }) { Text("XÓA", color = MaterialTheme.colorScheme.error) }
+                                    }
+                                    TextButton(onClick = { showGoalDialog = false }) { Text("HỦY") }
+                                }
                             }
                         )
                     }
@@ -213,6 +221,21 @@ fun ReportScreen(viewModel: LedgerViewModel) {
                             
                             val avgPerTrip = if (totalTrips > 0) totalRev / totalTrips else 0L
                             StatRow("TB Doanh thu/cuốc", FormatUtils.formatCurrency(avgPerTrip))
+
+                            val totalKm = revenueEntries.sumOf { (it.distanceKm ?: 0f).toDouble() }.toFloat()
+                            val totalHours = revenueEntries.sumOf { (it.durationHrs ?: 0f).toDouble() }.toFloat()
+
+                            if (totalKm > 0) {
+                                StatRow("Tổng số Km", "${String.format("%.1f", totalKm).replace(".", ",")} km")
+                                val revPerKm = if (totalKm > 0) (totalRev / totalKm).toLong() else 0L
+                                StatRow("Doanh thu/Km", FormatUtils.formatCurrency(revPerKm))
+                            }
+
+                            if (totalHours > 0) {
+                                StatRow("Tổng giờ chạy", "${String.format("%.1f", totalHours).replace(".", ",")} giờ")
+                                val revPerHour = if (totalHours > 0) (totalRev / totalHours).toLong() else 0L
+                                StatRow("Doanh thu/giờ", FormatUtils.formatCurrency(revPerHour))
+                            }
                         }
                     }
                 }
@@ -229,7 +252,7 @@ fun ReportScreen(viewModel: LedgerViewModel) {
 
                     breakdown.forEach { (source, amount, trips) ->
                         val percent = if (totalRev > 0) (amount.toFloat() / totalRev.toFloat()) * 100 else 0f
-                        RevenueBreakdownItem(source, amount, trips, percent)
+                        com.example.ui.screens.RevenueBreakdownItem(source, amount, trips, percent)
                     }
                 }
                 
@@ -242,6 +265,9 @@ fun ReportScreen(viewModel: LedgerViewModel) {
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
+                            if (daysWorked < 3) {
+                                Text("• Dựa trên dữ liệu ít ỏi hiện có:", modifier = Modifier.padding(vertical = 4.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
                             val breakdown = sources.map { source ->
                                 val sourceRevenue = revenueEntries.filter { it.sourceId == source.id }.sumOf { it.amount }
                                 Pair(source, sourceRevenue)

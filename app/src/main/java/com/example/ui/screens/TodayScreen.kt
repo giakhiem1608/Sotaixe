@@ -29,7 +29,7 @@ import com.example.ui.theme.*
 import com.example.ui.viewmodels.LedgerViewModel
 import com.example.utils.FormatUtils
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun TodayScreen(viewModel: LedgerViewModel) {
     val currentDate by viewModel.currentDate.collectAsState()
@@ -211,28 +211,28 @@ fun TodayScreen(viewModel: LedgerViewModel) {
                 onClick = { showAddExpenseSheet = true },
                 modifier = Modifier
                     .weight(1f)
-                    .height(56.dp),
+                    .height(48.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("CHI PHÍ", fontWeight = FontWeight.Bold)
+                Text("+ CHI PHÍ", fontWeight = FontWeight.Bold)
             }
 
             Button(
                 onClick = { showAddRevenueSheet = true },
                 modifier = Modifier
                     .weight(1f)
-                    .height(56.dp),
+                    .height(48.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("NHẬP DOANH THU", fontWeight = FontWeight.Bold)
+                Text("+ DOANH THU", fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -271,41 +271,42 @@ fun RevenueBreakdownItem(source: RevenueSource, amount: Long, trips: Int, percen
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 2.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(16.dp)
-                    .clip(RoundedCornerShape(4.dp))
+                    .size(12.dp)
+                    .clip(RoundedCornerShape(3.dp))
                     .background(color)
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(source.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
+                Text(source.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
                 Text(
-                    "$trips cuốc • ${String.format("%.1f", percent)}%",
-                    style = MaterialTheme.typography.bodyMedium,
+                    "$trips cuốc • ${String.format("%.1f", percent).replace(".", ",")}%",
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Text(
                 FormatUtils.formatCurrency(amount),
                 fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.bodyLarge
             )
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddRevenueSheet(
     sources: List<RevenueSource>,
@@ -333,8 +334,12 @@ fun AddRevenueSheet(
             Text("Nhập doanh thu", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Source selector (simple row of buttons)
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Source selector (FlowRow for multiple sources)
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 sources.forEach { source ->
                     FilterChip(
                         selected = selectedSourceId == source.id,
@@ -395,7 +400,7 @@ fun AddRevenueSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = amountStr.isNotBlank() && tripsStr.isNotBlank() && (tripsStr.toIntOrNull() ?: 0) >= 1
+                enabled = (amountStr.replace(Regex("[^0-9]"), "").toLongOrNull() ?: 0L) > 0L && tripsStr.isNotBlank() && (tripsStr.toIntOrNull() ?: 0) >= 1
             ) {
                 Text("LƯU DOANH THU", fontWeight = FontWeight.Bold)
             }
@@ -502,7 +507,7 @@ fun AddExpenseSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = amountStr.isNotBlank()
+                enabled = (amountStr.replace(Regex("[^0-9]"), "").toLongOrNull() ?: 0L) > 0L
             ) {
                 Text("LƯU CHI PHÍ", fontWeight = FontWeight.Bold)
             }

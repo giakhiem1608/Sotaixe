@@ -1,0 +1,2 @@
+sed -i 's/enabled = amountStr.isNotBlank() && tripsStr.isNotBlank() && (tripsStr.toIntOrNull() ?: 0) >= 1/enabled = (amountStr.replace(Regex("[^0-9]"), "").toLongOrNull() ?: 0L) > 0L \&\& tripsStr.isNotBlank() \&\& (tripsStr.toIntOrNull() ?: 0) >= 1/g' app/src/main/java/com/example/ui/screens/TodayScreen.kt
+sed -i 's/enabled = amountStr.isNotBlank()/enabled = (amountStr.replace(Regex("[^0-9]"), "").toLongOrNull() ?: 0L) > 0L/g' app/src/main/java/com/example/ui/screens/TodayScreen.kt

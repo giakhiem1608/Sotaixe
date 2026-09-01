@@ -1,0 +1,2 @@
+sed -i '/SettingsMenuItem(/i \
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.surfaceVariant)\n                SettingsMenuItem(\n                    title = "Xóa toàn bộ dữ liệu",\n                    subtitle = "Xóa tất cả giao dịch và thiết lập lại",\n                    icon = Icons.Default.DeleteForever,\n                    onClick = { showResetConfirm1 = true }\n                )\n' app/src/main/java/com/example/ui/screens/OtherScreen.kt

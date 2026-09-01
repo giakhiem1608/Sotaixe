@@ -41,8 +41,10 @@ fun OtherScreen(viewModel: LedgerViewModel) {
     
     var showManageSources by remember { mutableStateOf(false) }
     var showManageCategories by remember { mutableStateOf(false) }
-    var showCsvDialog by remember { mutableStateOf(false) }
+    var showXlsxDialog by remember { mutableStateOf(false) }
     var showRestoreConfirmDialog by remember { mutableStateOf(false) }
+    var showResetConfirmDialog1 by remember { mutableStateOf(false) }
+    var showResetConfirmDialog2 by remember { mutableStateOf(false) }
     var pendingRestoreUri by remember { mutableStateOf<Uri?>(null) }
     
     val currentMonth by viewModel.currentMonth.collectAsState()
@@ -99,6 +101,29 @@ fun OtherScreen(viewModel: LedgerViewModel) {
         }
     }
 
+    val xlsxLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    ) { uri ->
+        uri?.let {
+            try {
+                val outputStream = context.contentResolver.openOutputStream(it)
+                if (outputStream != null) {
+                    viewModel.exportXlsxData(currentMonth, outputStream) { success ->
+                        coroutineScope.launch {
+                            if (success) {
+                                Toast.makeText(context, "Xuất Excel thành công!", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(context, "Lỗi khi xuất Excel", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Lỗi khi ghi file", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -126,7 +151,7 @@ fun OtherScreen(viewModel: LedgerViewModel) {
                 )
             }
         }
-
+        
         Card(
             modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -135,9 +160,9 @@ fun OtherScreen(viewModel: LedgerViewModel) {
             Column {
                 SettingsMenuItem(
                     title = "Xuất dữ liệu",
-                    subtitle = "Lưu dữ liệu ra file Excel (CSV)",
+                    subtitle = "Lưu dữ liệu ra file Excel (.xlsx)",
                     icon = Icons.Default.InsertDriveFile,
-                    onClick = { showCsvDialog = true }
+                    onClick = { showXlsxDialog = true }
                 )
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.surfaceVariant)
                 SettingsMenuItem(
@@ -157,6 +182,13 @@ fun OtherScreen(viewModel: LedgerViewModel) {
                     onClick = { 
                         restoreLauncher.launch(arrayOf("application/json", "*/*")) 
                     }
+                )
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.surfaceVariant)
+                SettingsMenuItem(
+                    title = "Xóa toàn bộ dữ liệu",
+                    subtitle = "Xóa tất cả giao dịch và thiết lập lại",
+                    icon = Icons.Default.DeleteForever,
+                    onClick = { showRestoreConfirmDialog = true; pendingRestoreUri = Uri.parse("reset_data") } // Wait, this will trigger restore with invalid URI, let's create a new dialog
                 )
             }
         }
@@ -228,11 +260,42 @@ fun OtherScreen(viewModel: LedgerViewModel) {
         )
     }
 
-    if (showCsvDialog) {
+    if (showResetConfirmDialog1) {
+        AlertDialog(
+            onDismissRequest = { showResetConfirmDialog1 = false },
+            title = { Text("Cảnh báo nguy hiểm", color = MaterialTheme.colorScheme.error) },
+            text = { Text("Bạn đang chuẩn bị XÓA TOÀN BỘ dữ liệu giao dịch, mục tiêu, nguồn thu và chi phí. Hành động này không thể hoàn tác. Bạn có chắc chắn?") },
+            confirmButton = {
+                Button(onClick = { showResetConfirmDialog1 = false; showResetConfirmDialog2 = true }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) { Text("TIẾP TỤC XÓA") }
+            },
+            dismissButton = { TextButton(onClick = { showResetConfirmDialog1 = false }) { Text("HỦY") } }
+        )
+    }
+
+    if (showResetConfirmDialog2) {
+        AlertDialog(
+            onDismissRequest = { showResetConfirmDialog2 = false },
+            title = { Text("Xác nhận lần cuối", color = MaterialTheme.colorScheme.error) },
+            text = { Text("Xóa toàn bộ dữ liệu? Các danh mục thu chi sẽ được đặt lại về mặc định.") },
+            confirmButton = {
+                Button(onClick = { 
+                    coroutineScope.launch { 
+                        viewModel.resetAllData() 
+                        Toast.makeText(context, "Đã xóa toàn bộ dữ liệu", Toast.LENGTH_SHORT).show()
+                    }
+                    showResetConfirmDialog2 = false 
+                }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) { Text("CHẮC CHẮN XÓA") }
+            },
+            dismissButton = { TextButton(onClick = { showResetConfirmDialog2 = false }) { Text("HỦY") } }
+        )
+    }
+
+    if (showXlsxDialog) {
         var selectedOption by remember { mutableStateOf(0) }
+        var selectedFormat by remember { mutableStateOf("XLSX") }
         
         AlertDialog(
-            onDismissRequest = { showCsvDialog = false },
+            onDismissRequest = { showXlsxDialog = false },
             title = { Text("Chọn tháng xuất dữ liệu") },
             text = {
                 Column {
@@ -243,12 +306,22 @@ fun OtherScreen(viewModel: LedgerViewModel) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { selectedOption = 1 }) {
                         RadioButton(selected = selectedOption == 1, onClick = { selectedOption = 1 })
                         Text("Tháng trước")
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Định dạng", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { selectedFormat = "XLSX" }) {
+                        RadioButton(selected = selectedFormat == "XLSX", onClick = { selectedFormat = "XLSX" })
+                        Text("Excel (.xlsx)")
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { selectedFormat = "CSV" }) {
+                        RadioButton(selected = selectedFormat == "CSV", onClick = { selectedFormat = "CSV" })
+                        Text("CSV")
+                    }
                     }
                 }
             },
             confirmButton = {
                 Button(onClick = {
-                    showCsvDialog = false
+                    showXlsxDialog = false
                     var targetMonth = currentMonth
                     if (selectedOption == 1) {
                         val format = SimpleDateFormat("yyyy-MM", Locale.getDefault())
@@ -257,13 +330,13 @@ fun OtherScreen(viewModel: LedgerViewModel) {
                         cal.add(Calendar.MONTH, -1)
                         targetMonth = format.format(cal.time)
                     }
-                    csvLauncher.launch("SoTaiXe_BaoCao_$targetMonth.csv")
+                    if (selectedFormat == "XLSX") xlsxLauncher.launch("SoTaiXe_BaoCao_$targetMonth.xlsx") else csvLauncher.launch("SoTaiXe_BaoCao_$targetMonth.csv")
                 }) {
                     Text("XUẤT")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showCsvDialog = false }) { Text("HỦY") }
+                TextButton(onClick = { showXlsxDialog = false }) { Text("HỦY") }
             }
         )
     }

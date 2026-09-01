@@ -2,6 +2,7 @@ package com.example.data
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.Delete
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
@@ -67,6 +68,8 @@ interface LedgerDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertGoal(goal: Goal)
+    @Delete
+    suspend fun deleteGoal(goal: Goal)
 
     // Statistics for today
     @Query("SELECT SUM(amount) FROM revenue_entries WHERE dateString = :dateString")

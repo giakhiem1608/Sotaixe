@@ -18,7 +18,7 @@ import com.example.data.RevenueEntry
 import com.example.data.RevenueSource
 import com.example.utils.CurrencyVisualTransformation
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun EditRevenueSheet(
     entry: RevenueEntry,
@@ -58,7 +58,7 @@ fun EditRevenueSheet(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Source selector
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 sources.forEach { source ->
                     FilterChip(
                         selected = selectedSourceId == source.id,
@@ -115,7 +115,7 @@ fun EditRevenueSheet(
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
-                enabled = amountStr.isNotBlank() && tripsStr.isNotBlank() && (tripsStr.toIntOrNull() ?: 0) >= 1
+                enabled = (amountStr.replace(Regex("[^0-9]"), "").toLongOrNull() ?: 0L) > 0L && tripsStr.isNotBlank() && (tripsStr.toIntOrNull() ?: 0) >= 1
             ) {
                 Text("CẬP NHẬT", fontWeight = FontWeight.Bold)
             }
@@ -241,7 +241,7 @@ fun EditExpenseSheet(
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
-                enabled = amountStr.isNotBlank()
+                enabled = (amountStr.replace(Regex("[^0-9]"), "").toLongOrNull() ?: 0L) > 0L
             ) {
                 Text("CẬP NHẬT", fontWeight = FontWeight.Bold)
             }

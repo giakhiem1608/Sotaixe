@@ -1,0 +1,1 @@
+sed -i 's/var selectedOption by remember { mutableStateOf(0) }/var selectedOption by remember { mutableStateOf(0) }\n        var selectedFormat by remember { mutableStateOf("XLSX") }/g' app/src/main/java/com/example/ui/screens/OtherScreen.kt

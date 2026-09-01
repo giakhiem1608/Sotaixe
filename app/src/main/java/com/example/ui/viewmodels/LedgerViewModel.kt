@@ -174,10 +174,15 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
         viewModelScope.launch { repository.deleteExpenseEntry(id) }
     }
     
+    fun deleteGoal(goal: Goal) {
+        viewModelScope.launch { repository.deleteGoal(goal) }
+    }
     fun saveGoal(type: String, amount: Long) {
         viewModelScope.launch {
+            val currentId = currentMonthGoal.value?.id ?: 0
             repository.insertGoal(
                 Goal(
+                    id = currentId,
                     type = type,
                     amount = amount,
                     monthString = _currentMonth.value
@@ -243,6 +248,26 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
         }
     }
 
+    suspend fun resetAllData() {
+        repository.clearGoals()
+        repository.clearRevenueEntries()
+        repository.clearExpenseEntries()
+        repository.clearRevenueSources()
+        repository.clearExpenseCategories()
+        // Phục hồi lại mặc định
+        repository.insertRevenueSource(com.example.data.RevenueSource(name = "Xanh SM", colorHex = "#00BFA5", isDefault = true))
+        repository.insertRevenueSource(com.example.data.RevenueSource(name = "Grab", colorHex = "#00C853", isDefault = true))
+        repository.insertRevenueSource(com.example.data.RevenueSource(name = "Khách ngoài", colorHex = "#2979FF", isDefault = true))
+        repository.insertExpenseCategory(com.example.data.ExpenseCategory(name = "Sạc xe", iconName = "ev_station", isDefault = true))
+        repository.insertExpenseCategory(com.example.data.ExpenseCategory(name = "Ăn uống", iconName = "restaurant", isDefault = true))
+        repository.insertExpenseCategory(com.example.data.ExpenseCategory(name = "Gửi xe", iconName = "local_parking", isDefault = true))
+        repository.insertExpenseCategory(com.example.data.ExpenseCategory(name = "Cầu đường", iconName = "add_road", isDefault = true))
+        repository.insertExpenseCategory(com.example.data.ExpenseCategory(name = "Rửa xe", iconName = "local_car_wash", isDefault = true))
+        repository.insertExpenseCategory(com.example.data.ExpenseCategory(name = "Bảo dưỡng", iconName = "build", isDefault = true))
+        repository.insertExpenseCategory(com.example.data.ExpenseCategory(name = "Điện thoại / 4G", iconName = "phone_android", isDefault = true))
+        repository.insertExpenseCategory(com.example.data.ExpenseCategory(name = "Khác", iconName = "more_horiz", isDefault = true))
+    }
+
     fun restoreBackupData(json: String, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
             try {
@@ -260,7 +285,8 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
                     data.categories.forEach { repository.insertExpenseCategory(it) }
                     data.revenueEntries.forEach { repository.insertRevenueEntry(it) }
                     data.expenseEntries.forEach { repository.insertExpenseEntry(it) }
-                    data.goals.forEach { repository.insertGoal(it) }
+                    data.goals.forEach { val currentId = currentMonthGoal.value?.id ?: 0
+            repository.insertGoal(it) }
                     onResult(true)
                 } else {
                     onResult(false)
@@ -273,6 +299,82 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
     }
 
     // Export CSV
+    fun exportXlsxData(monthStr: String, outputStream: java.io.OutputStream, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val sources = repository.getAllRevenueSources()
+                val categories = repository.getAllExpenseCategories()
+                val revEntries = repository.getRevenueEntriesByMonth(monthStr).first()
+                val expEntries = repository.getExpenseEntriesByMonth(monthStr).first()
+
+                val sourceMap = sources.associateBy { it.id }
+                val categoryMap = categories.associateBy { it.id }
+
+                val wb = org.dhatim.fastexcel.Workbook(outputStream, "SoTaiXe", "1.0")
+                
+                val wsOverview = wb.newWorksheet("Tong quan")
+                wsOverview.value(0, 0, "BAO CAO THANG $monthStr")
+                wsOverview.style(0, 0).bold().set()
+                
+                val totalRev = revEntries.sumOf { it.amount }
+                val totalExp = expEntries.sumOf { it.amount }
+                val totalTrips = revEntries.sumOf { it.trips }
+                
+                wsOverview.value(2, 0, "Tong doanh thu")
+                wsOverview.value(2, 1, totalRev)
+                wsOverview.value(3, 0, "Tong chi phi")
+                wsOverview.value(3, 1, totalExp)
+                wsOverview.value(4, 0, "Thu nhap rong")
+                wsOverview.value(4, 1, totalRev - totalExp)
+                wsOverview.value(5, 0, "Tong so cuoc")
+                wsOverview.value(5, 1, totalTrips)
+
+                val wsRev = wb.newWorksheet("Doanh thu")
+                val revHeaders = listOf("Ngay", "Nguon", "So tien", "So cuoc", "Km", "Gio chay", "Ghi chu")
+                revHeaders.forEachIndexed { i, header -> 
+                    wsRev.value(0, i, header)
+                    wsRev.style(0, i).bold().set()
+                }
+                
+                revEntries.forEachIndexed { rowIdx, rev ->
+                    val r = rowIdx + 1
+                    val sourceName = sourceMap[rev.sourceId]?.name ?: "Khac"
+                    val date = FormatUtils.formatDate(FormatUtils.parseDbDate(rev.dateString))
+                    wsRev.value(r, 0, date)
+                    wsRev.value(r, 1, sourceName)
+                    wsRev.value(r, 2, rev.amount)
+                    wsRev.value(r, 3, rev.trips)
+                    if (rev.distanceKm != null) wsRev.value(r, 4, rev.distanceKm)
+                    if (rev.durationHrs != null) wsRev.value(r, 5, rev.durationHrs)
+                    wsRev.value(r, 6, rev.note)
+                }
+
+                val wsExp = wb.newWorksheet("Chi phi")
+                val expHeaders = listOf("Ngay", "Danh muc", "So tien", "Ghi chu")
+                expHeaders.forEachIndexed { i, header -> 
+                    wsExp.value(0, i, header)
+                    wsExp.style(0, i).bold().set()
+                }
+
+                expEntries.forEachIndexed { rowIdx, exp ->
+                    val r = rowIdx + 1
+                    val catName = categoryMap[exp.categoryId]?.name ?: "Khac"
+                    val date = FormatUtils.formatDate(FormatUtils.parseDbDate(exp.dateString))
+                    wsExp.value(r, 0, date)
+                    wsExp.value(r, 1, catName)
+                    wsExp.value(r, 2, exp.amount)
+                    wsExp.value(r, 3, exp.note)
+                }
+
+                wb.finish()
+                onResult(true)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                onResult(false)
+            }
+        }
+    }
+
     fun exportCsvData(monthStr: String, onResult: (String?) -> Unit) {
         viewModelScope.launch {
             try {

@@ -173,7 +173,8 @@ fun DayHistoryCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(16.dp)
+                    .padding(bottom = 0.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -190,38 +191,29 @@ fun DayHistoryCard(
                         fontSize = 16.sp
                     )
                     Text(
-                        text = "$totalTrips cuốc",
+                        text = "Thu nhập",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
-            // Summary by Source
-            if (revenues.isNotEmpty()) {
-                val breakdown = sources.map { source ->
-                    val sourceRevenues = revenues.filter { it.sourceId == source.id }
-                    val amount = sourceRevenues.sumOf { it.amount }
-                    val trips = sourceRevenues.sumOf { it.trips }
-                    Triple(source, amount, trips)
-                }.filter { it.second > 0 }
-
-                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    breakdown.forEach { (source, amount, trips) ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column {
-                                Text(source.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                                Text("$trips cuốc", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                            Text(FormatUtils.formatCurrency(amount), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
+            // Summary Row
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Text(
+                    text = "Doanh thu ${FormatUtils.formatCurrency(totalRev)} • Chi phí ${FormatUtils.formatCurrency(totalExp)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "$totalTrips cuốc",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
+            
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Button "Xem giao dịch"
             TextButton(

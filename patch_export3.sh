@@ -1,0 +1,1 @@
+sed -i 's/xlsxLauncher.launch("SoTaiXe_BaoCao_$targetMonth.xlsx")/if (selectedFormat == "XLSX") xlsxLauncher.launch("SoTaiXe_BaoCao_$targetMonth.xlsx") else csvLauncher.launch("SoTaiXe_BaoCao_$targetMonth.csv")/g' app/src/main/java/com/example/ui/screens/OtherScreen.kt
