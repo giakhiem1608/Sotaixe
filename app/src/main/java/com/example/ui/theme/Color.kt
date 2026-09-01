@@ -16,6 +16,6 @@ val Background = Color(0xFFF4FBF8)
 val Surface = Color(0xFFFFFFFF)
 
 // Source Colors
-val ColorXanhSM = Color(0xFF00BFA5)
-val ColorGrab = Color(0xFF00C853)
-val ColorKhachNgoai = Color(0xFF2979FF)
+val ColorXanhSM = Color(0xFF8B5CF6)
+val ColorGrab = Color(0xFF16A34A)
+val ColorKhachNgoai = Color(0xFF3B82F6)

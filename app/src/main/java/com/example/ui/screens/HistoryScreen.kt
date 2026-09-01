@@ -9,7 +9,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -127,6 +126,7 @@ fun DayHistoryCard(
     onEditExpense: (ExpenseEntry) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
+
     val totalRev = revenues.sumOf { it.amount }
     val totalExp = expenses.sumOf { it.amount }
     val netIncome = totalRev - totalExp
@@ -183,6 +183,7 @@ fun DayHistoryCard(
                     Text(FormatUtils.formatCurrency(sum), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
                 }
             }
+
             if (totalExp > 0) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
@@ -236,48 +237,6 @@ fun DayHistoryCard(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun RevenueEntryItem(entry: RevenueEntry, sources: List<RevenueSource>, onEdit: (RevenueEntry) -> Unit) {
-    val source = sources.find { it.id == entry.sourceId }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(source?.name ?: "Nguồn khác", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-            Text("${entry.trips} cuốc • ${FormatUtils.formatTime(entry.timestamp)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        Text(FormatUtils.formatCurrency(entry.amount), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-        IconButton(onClick = { onEdit(entry) }, modifier = Modifier.size(32.dp)) {
-            Icon(Icons.Filled.Edit, contentDescription = "Sửa", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-    }
-}
-
-@Composable
-fun ExpenseEntryItem(entry: ExpenseEntry, categories: List<ExpenseCategory>, onEdit: (ExpenseEntry) -> Unit) {
-    val category = categories.find { it.id == entry.categoryId }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(category?.name ?: "Khác", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-            Text(FormatUtils.formatTime(entry.timestamp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        Text("- " + FormatUtils.formatCurrency(entry.amount), fontWeight = FontWeight.Bold, color = ExpenseError)
-        IconButton(onClick = { onEdit(entry) }, modifier = Modifier.size(32.dp)) {
-            Icon(Icons.Filled.Edit, contentDescription = "Sửa", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

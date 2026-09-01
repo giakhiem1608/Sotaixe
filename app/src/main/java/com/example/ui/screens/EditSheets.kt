@@ -1,8 +1,7 @@
 package com.example.ui.screens
+
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -11,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -32,7 +32,7 @@ fun EditRevenueSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showDeleteConfirm by remember { mutableStateOf(false) }
-
+    
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState
@@ -41,7 +41,7 @@ fun EditRevenueSheet(
         var amountStr by remember { mutableStateOf(entry.amount.toString()) }
         var tripsStr by remember { mutableStateOf(entry.trips.toString()) }
         var note by remember { mutableStateOf(entry.note) }
-
+        
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -49,17 +49,9 @@ fun EditRevenueSheet(
                 .padding(bottom = 32.dp)
                 .imePadding().verticalScroll(rememberScrollState())
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text("Sửa doanh thu", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                IconButton(onClick = { showDeleteConfirm = true }) {
-                    Icon(Icons.Filled.Delete, contentDescription = "Xóa", tint = MaterialTheme.colorScheme.error)
-                }
-            }
+            Text("Sửa doanh thu", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(16.dp))
-
+            
             // Source selector
             FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 sources.forEach { source ->
@@ -71,7 +63,7 @@ fun EditRevenueSheet(
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
-
+            
             OutlinedTextField(
                 value = amountStr,
                 onValueChange = { newValue ->
@@ -84,7 +76,6 @@ fun EditRevenueSheet(
                 singleLine = true
             )
             Spacer(modifier = Modifier.height(8.dp))
-
             OutlinedTextField(
                 value = tripsStr,
                 onValueChange = { tripsStr = it },
@@ -94,7 +85,6 @@ fun EditRevenueSheet(
                 singleLine = true
             )
             Spacer(modifier = Modifier.height(8.dp))
-
             OutlinedTextField(
                 value = note,
                 onValueChange = { note = it },
@@ -103,33 +93,53 @@ fun EditRevenueSheet(
                 singleLine = true
             )
             Spacer(modifier = Modifier.height(24.dp))
-
-            Button(
-                onClick = {
-                    val amount = amountStr.replace(Regex("[^0-9]"), "").toLongOrNull()
-                    val trips = tripsStr.toIntOrNull()
-                    if (amount != null && trips != null && trips >= 1 && selectedSourceId != 0) {
-                        onSave(entry.copy(
-                            sourceId = selectedSourceId,
-                            amount = amount,
-                            trips = trips,
-                            note = note
-                        ))
-                    }
-                },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                enabled = (amountStr.replace(Regex("[^0-9]"), "").toLongOrNull() ?: 0L) > 0L && tripsStr.isNotBlank() && (tripsStr.toIntOrNull() ?: 0) >= 1
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("CẬP NHẬT", fontWeight = FontWeight.Bold)
+                OutlinedButton(
+                    onClick = { showDeleteConfirm = true },
+                    modifier = Modifier.weight(1f).height(56.dp)
+                ) {
+                    Text("XÓA", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                }
+                
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f).height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
+                ) {
+                    Text("HỦY", fontWeight = FontWeight.Bold)
+                }
+                
+                Button(
+                    onClick = {
+                        val amount = amountStr.replace(Regex("[^0-9]"), "").toLongOrNull()
+                        val trips = tripsStr.toIntOrNull()
+                        if (amount != null && trips != null && trips >= 1 && selectedSourceId != 0) {
+                            onSave(entry.copy(
+                                sourceId = selectedSourceId,
+                                amount = amount,
+                                trips = trips,
+                                note = note
+                            ))
+                        }
+                    },
+                    modifier = Modifier.weight(1f).height(56.dp),
+                    enabled = (amountStr.replace(Regex("[^0-9]"), "").toLongOrNull() ?: 0L) > 0L && tripsStr.isNotBlank() && (tripsStr.toIntOrNull() ?: 0) >= 1
+                ) {
+                    Text("LƯU", fontWeight = FontWeight.Bold)
+                }
             }
         }
     }
-
+    
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Xác nhận xóa") },
-            text = { Text("Bạn có chắc chắn muốn xóa giao dịch doanh thu này không?") },
+            title = { Text("Xóa giao dịch này?") },
+            text = { Text("Hành động này không thể hoàn tác.") },
             confirmButton = {
                 TextButton(onClick = { onDelete(); onDismiss() }) {
                     Text("XÓA", color = MaterialTheme.colorScheme.error)
@@ -155,7 +165,7 @@ fun EditExpenseSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showDeleteConfirm by remember { mutableStateOf(false) }
-
+    
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState
@@ -163,7 +173,7 @@ fun EditExpenseSheet(
         var selectedCategoryId by remember { mutableStateOf(entry.categoryId) }
         var amountStr by remember { mutableStateOf(entry.amount.toString()) }
         var note by remember { mutableStateOf(entry.note) }
-
+        
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -171,22 +181,11 @@ fun EditExpenseSheet(
                 .padding(bottom = 32.dp)
                 .imePadding().verticalScroll(rememberScrollState())
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text("Sửa chi phí", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                IconButton(onClick = { showDeleteConfirm = true }) {
-                    Icon(Icons.Filled.Delete, contentDescription = "Xóa", tint = MaterialTheme.colorScheme.error)
-                }
-            }
+            Text("Sửa chi phí", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(16.dp))
-
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            
+            // Category selector
+            FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 categories.forEach { category ->
                     FilterChip(
                         selected = selectedCategoryId == category.id,
@@ -209,7 +208,7 @@ fun EditExpenseSheet(
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
-
+            
             OutlinedTextField(
                 value = amountStr,
                 onValueChange = { newValue ->
@@ -222,7 +221,6 @@ fun EditExpenseSheet(
                 singleLine = true
             )
             Spacer(modifier = Modifier.height(8.dp))
-
             OutlinedTextField(
                 value = note,
                 onValueChange = { note = it },
@@ -231,31 +229,51 @@ fun EditExpenseSheet(
                 singleLine = true
             )
             Spacer(modifier = Modifier.height(24.dp))
-
-            Button(
-                onClick = {
-                    val amount = amountStr.replace(Regex("[^0-9]"), "").toLongOrNull()
-                    if (amount != null && selectedCategoryId != 0) {
-                        onSave(entry.copy(
-                            categoryId = selectedCategoryId,
-                            amount = amount,
-                            note = note
-                        ))
-                    }
-                },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                enabled = (amountStr.replace(Regex("[^0-9]"), "").toLongOrNull() ?: 0L) > 0L
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("CẬP NHẬT", fontWeight = FontWeight.Bold)
+                OutlinedButton(
+                    onClick = { showDeleteConfirm = true },
+                    modifier = Modifier.weight(1f).height(56.dp)
+                ) {
+                    Text("XÓA", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                }
+                
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f).height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
+                ) {
+                    Text("HỦY", fontWeight = FontWeight.Bold)
+                }
+                
+                Button(
+                    onClick = {
+                        val amount = amountStr.replace(Regex("[^0-9]"), "").toLongOrNull()
+                        if (amount != null && selectedCategoryId != 0) {
+                            onSave(entry.copy(
+                                categoryId = selectedCategoryId,
+                                amount = amount,
+                                note = note
+                            ))
+                        }
+                    },
+                    modifier = Modifier.weight(1f).height(56.dp),
+                    enabled = (amountStr.replace(Regex("[^0-9]"), "").toLongOrNull() ?: 0L) > 0L
+                ) {
+                    Text("LƯU", fontWeight = FontWeight.Bold)
+                }
             }
         }
     }
-
+    
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Xác nhận xóa") },
-            text = { Text("Bạn có chắc chắn muốn xóa giao dịch chi phí này không?") },
+            title = { Text("Xóa giao dịch này?") },
+            text = { Text("Hành động này không thể hoàn tác.") },
             confirmButton = {
                 TextButton(onClick = { onDelete(); onDismiss() }) {
                     Text("XÓA", color = MaterialTheme.colorScheme.error)

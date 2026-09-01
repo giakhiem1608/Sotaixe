@@ -255,9 +255,9 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
         repository.clearRevenueSources()
         repository.clearExpenseCategories()
         // Phục hồi lại mặc định
-        repository.insertRevenueSource(com.example.data.RevenueSource(name = "Xanh SM", colorHex = "#00BFA5", isDefault = true))
-        repository.insertRevenueSource(com.example.data.RevenueSource(name = "Grab", colorHex = "#00C853", isDefault = true))
-        repository.insertRevenueSource(com.example.data.RevenueSource(name = "Khách ngoài", colorHex = "#2979FF", isDefault = true))
+        repository.insertRevenueSource(com.example.data.RevenueSource(name = "Xanh SM", colorHex = "#8B5CF6", isDefault = true))
+        repository.insertRevenueSource(com.example.data.RevenueSource(name = "Grab", colorHex = "#16A34A", isDefault = true))
+        repository.insertRevenueSource(com.example.data.RevenueSource(name = "Khách ngoài", colorHex = "#3B82F6", isDefault = true))
         repository.insertExpenseCategory(com.example.data.ExpenseCategory(name = "Sạc xe", iconName = "ev_station", isDefault = true))
         repository.insertExpenseCategory(com.example.data.ExpenseCategory(name = "Ăn uống", iconName = "restaurant", isDefault = true))
         repository.insertExpenseCategory(com.example.data.ExpenseCategory(name = "Gửi xe", iconName = "local_parking", isDefault = true))
@@ -299,13 +299,13 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
     }
 
     // Export CSV
-    fun exportXlsxData(monthStr: String, outputStream: java.io.OutputStream, onResult: (Boolean) -> Unit) {
+    fun exportXlsxDataRange(startDateStr: String, endDateStr: String, label: String, outputStream: java.io.OutputStream, onResult: (Boolean) -> Unit) {
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             try {
                 val sources = repository.getAllRevenueSources()
                 val categories = repository.getAllExpenseCategories()
-                val revEntries = repository.getRevenueEntriesByMonth(monthStr).first()
-                val expEntries = repository.getExpenseEntriesByMonth(monthStr).first()
+                val allRev = repository.getAllRevenueEntries(); val revEntries = allRev.filter { it.dateString in startDateStr..endDateStr }
+                val allExp = repository.getAllExpenseEntries(); val expEntries = allExp.filter { it.dateString in startDateStr..endDateStr }
 
                 val sourceMap = sources.associateBy { it.id }
                 val categoryMap = categories.associateBy { it.id }
@@ -313,7 +313,7 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
                 val wb = org.dhatim.fastexcel.Workbook(outputStream, "SoTaiXe", "1.0")
                 
                 val wsOverview = wb.newWorksheet("Tong quan")
-                wsOverview.value(0, 0, "BAO CAO THANG $monthStr")
+                wsOverview.value(0, 0, "BAO CAO: $label")
                 wsOverview.style(0, 0).bold().set()
                 
                 val totalRev = revEntries.sumOf { it.amount }
@@ -375,42 +375,6 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
         }
     }
 
-    fun exportCsvData(monthStr: String, onResult: (String?) -> Unit) {
-        viewModelScope.launch {
-            try {
-                val sources = repository.getAllRevenueSources()
-                val categories = repository.getAllExpenseCategories()
-                val revEntries = repository.getRevenueEntriesByMonth(monthStr).first()
-                val expEntries = repository.getExpenseEntriesByMonth(monthStr).first()
-
-                val sourceMap = sources.associateBy { it.id }
-                val categoryMap = categories.associateBy { it.id }
-
-                val sb = java.lang.StringBuilder()
-                // CSV Header
-                sb.append("Loai,Ngay,Nguon/Danh muc,So tien,So cuoc,Km,Gio chay,Ghi chu\n")
-
-                revEntries.forEach { rev ->
-                    val sourceName = sourceMap[rev.sourceId]?.name ?: "Khác"
-                    val date = FormatUtils.formatDate(FormatUtils.parseDbDate(rev.dateString))
-                    val note = rev.note.replace(",", " ")
-                    sb.append("Doanh thu,$date,$sourceName,${rev.amount},${rev.trips},${rev.distanceKm ?: ""},${rev.durationHrs ?: ""},$note\n")
-                }
-
-                expEntries.forEach { exp ->
-                    val catName = categoryMap[exp.categoryId]?.name ?: "Khác"
-                    val date = FormatUtils.formatDate(FormatUtils.parseDbDate(exp.dateString))
-                    val note = exp.note.replace(",", " ")
-                    sb.append("Chi phi,$date,$catName,${exp.amount},,,, $note\n")
-                }
-
-                onResult(sb.toString())
-            } catch (e: Exception) {
-                e.printStackTrace()
-                onResult(null)
-            }
-        }
-    }
 }
 
 class LedgerViewModelFactory(private val repository: LedgerRepository) : ViewModelProvider.Factory {

@@ -1,0 +1,2 @@
+sed -i '/breakdown.forEach { (source, amount, trips) ->/,/}/d' app/src/main/java/com/example/ui/screens/ReportScreen.kt
+sed -i '/val breakdown = sources.map { source ->/a \                        com.example.ui.components.RevenueBreakdown(\n                            totalRevenue = totalRev,\n                            breakdown = breakdown\n                        )' app/src/main/java/com/example/ui/screens/ReportScreen.kt

@@ -29,17 +29,19 @@ fun ReportScreen(viewModel: LedgerViewModel) {
     val revenueEntries by viewModel.historyRevenueEntries.collectAsState()
     val expenseEntries by viewModel.historyExpenseEntries.collectAsState()
     val sources by viewModel.activeRevenueSources.collectAsState()
-
+    
     val displayMonth = remember(currentMonthStr) {
         val date = FormatUtils.parseDbMonth(currentMonthStr)
         if (date != null) FormatUtils.formatMonth(date.time) else currentMonthStr
     }
-
+    
     val totalRev = revenueEntries.sumOf { it.amount }
     val totalExp = expenseEntries.sumOf { it.amount }
     val netIncome = totalRev - totalExp
     val totalTrips = revenueEntries.sumOf { it.trips }
     val daysWorked = revenueEntries.map { it.dateString }.distinct().size
+    
+    var showMonthPicker by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -56,18 +58,20 @@ fun ReportScreen(viewModel: LedgerViewModel) {
             IconButton(onClick = { viewModel.previousMonth() }) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Tháng trước")
             }
-            Text(
-                text = "BÁO CÁO THÁNG $displayMonth",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
+            TextButton(onClick = { showMonthPicker = true }) {
+                Text(
+                    text = "BÁO CÁO THÁNG $displayMonth",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
             IconButton(onClick = { viewModel.nextMonth() }) {
                 Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Tháng sau")
             }
         }
-
+        
         Spacer(modifier = Modifier.height(16.dp))
-
+        
         if (totalRev == 0L && totalExp == 0L) {
             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                 Text("Chưa có dữ liệu để báo cáo", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -81,14 +85,14 @@ fun ReportScreen(viewModel: LedgerViewModel) {
                 item {
                     val goal by viewModel.currentMonthGoal.collectAsState()
                     var showGoalDialog by remember { mutableStateOf(false) }
-
+                    
                     Card(
                         modifier = Modifier.fillMaxWidth().clickable { showGoalDialog = true },
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("MỤC TIÊU THÁNG $displayMonth", fontWeight = FontWeight.Bold)
+                                Text("Mục tiêu tháng $displayMonth", fontWeight = FontWeight.Bold)
                                 Icon(Icons.Filled.Edit, contentDescription = "Sửa mục tiêu", modifier = Modifier.size(20.dp))
                             }
                             
@@ -99,119 +103,83 @@ fun ReportScreen(viewModel: LedgerViewModel) {
                                 val percent = if (goal!!.amount > 0) (currentAmount.toFloat() / goal!!.amount.toFloat()).coerceIn(0f, 1f) else 0f
                                 val remain = goal!!.amount - currentAmount
                                 
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text("${FormatUtils.formatCurrency(currentAmount)} / ${FormatUtils.formatCurrency(goal!!.amount)}", fontWeight = FontWeight.Bold)
-                                    Text("${(percent * 100).toInt()}%")
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f))
+                                ) {
+                                    Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(percent).background(MaterialTheme.colorScheme.primary))
                                 }
+                                
                                 Spacer(modifier = Modifier.height(8.dp))
-                                LinearProgressIndicator(
-                                    progress = { percent },
-                                    modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
-                                    color = MaterialTheme.colorScheme.primary,
-                                    trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                Text(
+                                    text = if (remain > 0) "Còn thiếu ${FormatUtils.formatCurrency(remain)} để đạt mục tiêu" else "Đã đạt mục tiêu. Chúc mừng bạn!",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
                                 )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                if (remain > 0) {
-                                    Text("Còn ${FormatUtils.formatCurrency(remain)}", style = MaterialTheme.typography.bodySmall)
-                                } else {
-                                    Text("Đã đạt mục tiêu! Tuyệt vời!", style = MaterialTheme.typography.bodySmall, color = ColorGrab)
-                                }
                             }
                         }
                     }
-
+                    
                     if (showGoalDialog) {
-                        var goalAmountStr by remember { mutableStateOf(goal?.amount?.toString() ?: "") }
-                        var goalType by remember { mutableStateOf(goal?.type ?: "NET_INCOME") }
-
-                        AlertDialog(
-                            onDismissRequest = { showGoalDialog = false },
-                            title = { Text("Thiết lập mục tiêu") },
-                            text = {
-                                Column {
-                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                                        FilterChip(selected = goalType == "REVENUE", onClick = { goalType = "REVENUE" }, label = { Text("Doanh thu") })
-                                        FilterChip(selected = goalType == "NET_INCOME", onClick = { goalType = "NET_INCOME" }, label = { Text("Thu nhập") })
-                                    }
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    OutlinedTextField(
-                                        value = goalAmountStr,
-                                        onValueChange = { if (it.all { char -> char.isDigit() }) goalAmountStr = it },
-                                        label = { Text("Số tiền mục tiêu (đ)") },
-                                        visualTransformation = com.example.utils.CurrencyVisualTransformation(),
-                                        singleLine = true
-                                    )
-                                }
+                        GoalSettingDialog(
+                            currentGoal = goal,
+                            onDismiss = { showGoalDialog = false },
+                            onSave = { type, amount ->
+                                viewModel.saveGoal(type, amount)
+                                showGoalDialog = false
                             },
-                            confirmButton = {
-                                TextButton(onClick = {
-                                    val amount = goalAmountStr.toLongOrNull()
-                                    if (amount != null) {
-                                        viewModel.saveGoal(goalType, amount)
-                                        showGoalDialog = false
-                                    }
-                                }) {
-                                    Text("LƯU")
-                                }
-                            },
-                            dismissButton = {
-                                Row {
-                                    if (goal != null) {
-                                        TextButton(onClick = {
-                                            viewModel.deleteGoal(goal!!)
-                                            showGoalDialog = false
-                                        }) { Text("XÓA", color = MaterialTheme.colorScheme.error) }
-                                    }
-                                    TextButton(onClick = { showGoalDialog = false }) { Text("HỦY") }
-                                }
+                            onDelete = {
+                                if (goal != null) { viewModel.deleteGoal(goal!!) }
+                                showGoalDialog = false
                             }
                         )
                     }
                 }
-
-                // Overview Card
+                
+                // Summary Card
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
-                        shape = RoundedCornerShape(16.dp)
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
                     ) {
-                        Column(modifier = Modifier.padding(24.dp)) {
-                            Text("Tổng Thu Nhập", color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f))
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("Tổng thu nhập", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                FormatUtils.formatCurrency(netIncome),
-                                style = MaterialTheme.typography.headlineLarge,
+                                text = FormatUtils.formatCurrency(netIncome),
+                                style = MaterialTheme.typography.displaySmall.copy(fontSize = 32.sp),
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimary
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
+                            
                             Spacer(modifier = Modifier.height(16.dp))
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Column {
-                                    Text("Doanh thu", color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f), style = MaterialTheme.typography.bodySmall)
-                                    Text(FormatUtils.formatCurrency(totalRev), color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
+                                Column(horizontalAlignment = Alignment.Start) {
+                                    Text("Doanh thu", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(FormatUtils.formatCurrency(totalRev), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                                 }
                                 Column(horizontalAlignment = Alignment.End) {
-                                    Text("Chi phí", color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f), style = MaterialTheme.typography.bodySmall)
-                                    Text(FormatUtils.formatCurrency(totalExp), color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
+                                    Text("Chi phí", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(FormatUtils.formatCurrency(totalExp), fontWeight = FontWeight.Bold, color = if (totalExp > 0) ExpenseError else MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
                         }
                     }
                 }
-
-                // Stats Details
+                
+                // Stats Card
                 item {
+                    Text("Thống kê", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Thống Kê", fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 12.dp))
-                            
-                            StatRow("Số ngày chạy", "$daysWorked ngày")
                             StatRow("Tổng số cuốc", "$totalTrips cuốc")
+                            StatRow("Số ngày chạy", "$daysWorked ngày")
                             
                             val avgRevPerDay = if (daysWorked > 0) totalRev / daysWorked else 0L
                             StatRow("TB Doanh thu/ngày", FormatUtils.formatCurrency(avgRevPerDay))
@@ -242,70 +210,39 @@ fun ReportScreen(viewModel: LedgerViewModel) {
 
                 // Sources Breakdown
                 item {
-                    Text("Cơ Cấu Nguồn Thu", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
-                    
-                    val breakdown = sources.map { source ->
+                    Text("Cơ cấu nguồn thu", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
+                    val breakdownList = sources.map { source ->
                         val sourceRevenue = revenueEntries.filter { it.sourceId == source.id }.sumOf { it.amount }
                         val sourceTrips = revenueEntries.filter { it.sourceId == source.id }.sumOf { it.trips }
                         Triple(source, sourceRevenue, sourceTrips)
                     }.filter { it.second > 0 }.sortedByDescending { it.second }
-
-                    breakdown.forEach { (source, amount, trips) ->
-                        val percent = if (totalRev > 0) (amount.toFloat() / totalRev.toFloat()) * 100 else 0f
-                        val colorHex = source.colorHex.replace("#", "")
-                        val color = Color(android.graphics.Color.parseColor("#$colorHex"))
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(modifier = Modifier.size(12.dp).clip(RoundedCornerShape(6.dp)).background(color))
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(source.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-                                Text("$trips cuốc • ${String.format("%.1f", percent)}%", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                            Text(FormatUtils.formatCurrency(amount), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                        }
-                    }
+                    
+                    com.example.ui.components.RevenueBreakdown(
+                        totalRevenue = totalRev,
+                        breakdown = breakdownList
+                    )
                 }
                 
                 // Smart Stats
                 item {
-                    Text("Nhận Xét Thông Minh", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
+                    Text("Nhận xét thông minh", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
                     
                     Card(
                         modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            if (daysWorked < 3) {
-                                Text("• Dựa trên dữ liệu ít ỏi hiện có:", modifier = Modifier.padding(vertical = 4.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                            val breakdown = sources.map { source ->
+                            Text("Dựa trên dữ liệu hiện có:", modifier = Modifier.padding(vertical = 4.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            
+                            val breakdownList = sources.map { source ->
                                 val sourceRevenue = revenueEntries.filter { it.sourceId == source.id }.sumOf { it.amount }
                                 Pair(source, sourceRevenue)
                             }.filter { it.second > 0 }.sortedByDescending { it.second }
                             
-                            if (breakdown.isNotEmpty()) {
-                                val topSource = breakdown.first()
+                            if (breakdownList.isNotEmpty()) {
+                                val topSource = breakdownList.first()
                                 val topPercent = (topSource.second.toFloat() / totalRev.toFloat()) * 100
                                 Text("• ${topSource.first.name} đang chiếm ${String.format("%.1f", topPercent).replace(".", ",")}% tổng doanh thu tháng này.", modifier = Modifier.padding(vertical = 4.dp))
-
-                                if (breakdown.size >= 2) {
-                                    val secondSource = breakdown[1]
-                                    val firstTrips = revenueEntries.filter { it.sourceId == topSource.first.id }.sumOf { it.trips }
-                                    val secondTrips = revenueEntries.filter { it.sourceId == secondSource.first.id }.sumOf { it.trips }
-                                    val firstAvgTrip = if (firstTrips > 0) topSource.second / firstTrips else 0L
-                                    val secondAvgTrip = if (secondTrips > 0) secondSource.second / secondTrips else 0L
-                                    if (firstAvgTrip > 0 && secondAvgTrip > 0) {
-                                        val diffPercent = ((Math.abs(firstAvgTrip - secondAvgTrip).toFloat() / Math.min(firstAvgTrip, secondAvgTrip).toFloat()) * 100).toInt()
-                                        if (diffPercent > 0) {
-                                            val higher = if (firstAvgTrip > secondAvgTrip) topSource.first.name else secondSource.first.name
-                                            val lower = if (firstAvgTrip > secondAvgTrip) secondSource.first.name else topSource.first.name
-                                            Text("• Doanh thu trung bình/cuốc của $higher cao hơn $lower khoảng $diffPercent%.", modifier = Modifier.padding(vertical = 4.dp))
-                                        }
-                                    }
-                                }
                             }
                             
                             val dates = revenueEntries.groupBy { it.dateString }
@@ -340,6 +277,17 @@ fun ReportScreen(viewModel: LedgerViewModel) {
             }
         }
     }
+    
+    if (showMonthPicker) {
+        com.example.ui.components.MonthYearPickerDialog(
+            currentMonthStr = currentMonthStr,
+            onDismiss = { showMonthPicker = false },
+            onConfirm = { 
+                viewModel.setMonth(it)
+                showMonthPicker = false
+            }
+        )
+    }
 }
 
 @Composable
@@ -350,5 +298,102 @@ fun StatRow(label: String, value: String) {
     ) {
         Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(value, fontWeight = FontWeight.Bold)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun GoalSettingDialog(
+    currentGoal: com.example.data.Goal?,
+    onDismiss: () -> Unit,
+    onSave: (String, Long) -> Unit,
+    onDelete: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState
+    ) {
+        var goalType by remember { mutableStateOf(currentGoal?.type ?: "REVENUE") }
+        var amountStr by remember { mutableStateOf(if (currentGoal != null && currentGoal.amount > 0) currentGoal.amount.toString() else "") }
+        
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .padding(bottom = 32.dp)
+        ) {
+            Text("THIẾT LẬP MỤC TIÊU", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Tab Row for Goal Type
+            TabRow(
+                selectedTabIndex = if (goalType == "REVENUE") 0 else 1,
+                modifier = Modifier.clip(RoundedCornerShape(8.dp))
+            ) {
+                Tab(
+                    selected = goalType == "REVENUE",
+                    onClick = { goalType = "REVENUE" },
+                    text = { Text("Doanh thu") }
+                )
+                Tab(
+                    selected = goalType == "NET_INCOME",
+                    onClick = { goalType = "NET_INCOME" },
+                    text = { Text("Thu nhập") }
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            OutlinedTextField(
+                value = amountStr,
+                onValueChange = { newValue ->
+                    if (newValue.all { it.isDigit() }) amountStr = newValue
+                },
+                label = { Text("Mục tiêu tháng (đ)") },
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                visualTransformation = com.example.utils.CurrencyVisualTransformation(),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                if (currentGoal != null) {
+                    OutlinedButton(
+                        onClick = onDelete,
+                        modifier = Modifier.weight(1f).height(56.dp)
+                    ) {
+                        Text("XÓA", color = ExpenseError)
+                    }
+                }
+                
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f).height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
+                ) {
+                    Text("HỦY")
+                }
+                
+                Button(
+                    onClick = {
+                        val amount = amountStr.replace(Regex("[^0-9]"), "").toLongOrNull()
+                        if (amount != null && amount > 0) {
+                            onSave(goalType, amount)
+                        }
+                    },
+                    modifier = Modifier.weight(1f).height(56.dp),
+                    enabled = (amountStr.replace(Regex("[^0-9]"), "").toLongOrNull() ?: 0L) > 0L
+                ) {
+                    Text("LƯU", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
     }
 }

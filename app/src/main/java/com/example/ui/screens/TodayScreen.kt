@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -20,14 +22,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import com.example.data.ExpenseCategory
 import com.example.data.RevenueSource
-import com.example.data.RevenueEntry
+import com.example.ui.components.RevenueBreakdown
 import com.example.ui.theme.*
 import com.example.ui.viewmodels.LedgerViewModel
 import com.example.utils.FormatUtils
@@ -39,8 +38,6 @@ fun TodayScreen(viewModel: LedgerViewModel) {
     val totalRevenue by viewModel.todaysTotalRevenue.collectAsState()
     val totalExpense by viewModel.todaysTotalExpense.collectAsState()
     val totalTrips by viewModel.todaysTotalTrips.collectAsState()
-    val totalDuration by viewModel.todaysTotalDuration.collectAsState()
-    val totalDistance by viewModel.todaysTotalDistance.collectAsState()
     val netIncome by viewModel.todaysNetIncome.collectAsState()
     
     val revenueEntries by viewModel.todaysRevenueEntries.collectAsState()
@@ -49,12 +46,16 @@ fun TodayScreen(viewModel: LedgerViewModel) {
     
     var showAddRevenueSheet by remember { mutableStateOf(false) }
     var showAddExpenseSheet by remember { mutableStateOf(false) }
+    
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = currentDate)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 20.dp, vertical = 16.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .verticalScroll(rememberScrollState())
     ) {
         // Compact Header
         Row(
@@ -65,53 +66,57 @@ fun TodayScreen(viewModel: LedgerViewModel) {
             IconButton(onClick = { viewModel.previousDay() }) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Ngày trước")
             }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = FormatUtils.formatDate(currentDate),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = FormatUtils.getDayOfWeek(currentDate).uppercase(),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            
+            TextButton(onClick = { showDatePicker = true }) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = FormatUtils.formatDate(currentDate),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = FormatUtils.getDayOfWeek(currentDate).uppercase(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
+            
             IconButton(onClick = { viewModel.nextDay() }) {
                 Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Ngày sau")
             }
         }
         
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        // Hero Card
+        // Hero Card (Compacted)
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-            shape = RoundedCornerShape(24.dp)
+            shape = RoundedCornerShape(20.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = "THU NHẬP HÔM NAY",
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = FormatUtils.formatCurrency(netIncome),
-                    style = MaterialTheme.typography.displayMedium.copy(fontSize = 36.sp),
+                    style = MaterialTheme.typography.displaySmall.copy(fontSize = 32.sp),
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
                 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -123,61 +128,61 @@ fun TodayScreen(viewModel: LedgerViewModel) {
                     }
                     Column(horizontalAlignment = Alignment.End) {
                         Text("Chi phí", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(FormatUtils.formatCurrency(totalExpense), fontWeight = FontWeight.Bold, color = ExpenseError)
+                        Text(FormatUtils.formatCurrency(totalExpense), fontWeight = FontWeight.Bold, color = if (totalExpense > 0) ExpenseError else MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
                 Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                Spacer(modifier = Modifier.height(8.dp))
                 
                 val avgRevenue = if (totalTrips > 0) totalRevenue / totalTrips else 0L
                 Text(
                     text = if (totalTrips > 0) "$totalTrips cuốc • TB ${FormatUtils.formatCurrency(avgRevenue)}/cuốc" else "Chưa có cuốc nào",
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
         }
         
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         
         // Quick Action
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Button(
                 onClick = { showAddExpenseSheet = true },
                 modifier = Modifier
                     .weight(1f)
-                    .height(56.dp),
+                    .height(52.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     contentColor = MaterialTheme.colorScheme.primary
                 ),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp),
-                shape = RoundedCornerShape(16.dp)
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp),
+                shape = RoundedCornerShape(12.dp)
             ) {
-                Text("+ Chi phí", fontWeight = FontWeight.Bold)
+                Text("+ Chi phí", fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
             }
             Button(
                 onClick = { showAddRevenueSheet = true },
                 modifier = Modifier
                     .weight(1f)
-                    .height(56.dp),
+                    .height(52.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(12.dp)
             ) {
-                Text("+ Doanh thu", fontWeight = FontWeight.Bold)
+                Text("+ Doanh thu", fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
         
         Text(
             text = "Cơ cấu doanh thu",
@@ -187,61 +192,40 @@ fun TodayScreen(viewModel: LedgerViewModel) {
             modifier = Modifier.padding(bottom = 12.dp)
         )
         
-        if (totalRevenue == 0L) {
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.TopCenter
-            ) {
-                Text(
-                    "Chưa có dữ liệu",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 32.dp)
-                )
-            }
-        } else {
-            val breakdown = sources.map { source ->
-                val sourceRevenue = revenueEntries.filter { it.sourceId == source.id }.sumOf { it.amount }
-                val sourceTrips = revenueEntries.filter { it.sourceId == source.id }.sumOf { it.trips }
-                Triple(source, sourceRevenue, sourceTrips)
-            }.filter { it.second > 0 }.sortedByDescending { it.second }
-            
-            // Stacked progress bar
-            Row(modifier = Modifier.fillMaxWidth().height(12.dp).clip(RoundedCornerShape(6.dp))) {
-                breakdown.forEach { (source, amount, _) ->
-                    val weight = amount.toFloat() / totalRevenue.toFloat()
-                    val colorHex = source.colorHex.replace("#", "")
-                    val color = Color(android.graphics.Color.parseColor("#$colorHex"))
-                    Box(modifier = Modifier.weight(weight).fillMaxHeight().background(color))
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(breakdown) { (source, amount, trips) ->
-                    val percent = if (totalRevenue > 0) (amount.toFloat() / totalRevenue.toFloat()) * 100 else 0f
-                    val colorHex = source.colorHex.replace("#", "")
-                    val color = Color(android.graphics.Color.parseColor("#$colorHex"))
-                    
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(modifier = Modifier.size(12.dp).clip(RoundedCornerShape(6.dp)).background(color))
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(source.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-                            Text("$trips cuốc • ${String.format("%.1f", percent)}%", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        Text(FormatUtils.formatCurrency(amount), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        val breakdownList = sources.map { source ->
+            val sourceRevenue = revenueEntries.filter { it.sourceId == source.id }.sumOf { it.amount }
+            val sourceTrips = revenueEntries.filter { it.sourceId == source.id }.sumOf { it.trips }
+            Triple(source, sourceRevenue, sourceTrips)
+        }.filter { it.second > 0 }.sortedByDescending { it.second }
+        
+        RevenueBreakdown(
+            totalRevenue = totalRevenue,
+            breakdown = breakdownList
+        )
+        
+        Spacer(modifier = Modifier.height(40.dp))
+    }
+    
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let {
+                        viewModel.setDate(it)
                     }
+                    showDatePicker = false
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("HỦY")
                 }
             }
+        ) {
+            DatePicker(state = datePickerState)
         }
     }
     

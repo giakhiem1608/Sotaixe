@@ -1,0 +1,3 @@
+sed -i 's/val revEntries = repository.getRevenueEntriesByMonth(monthStr).first()/val allRev = repository.getAllRevenueEntries(); val revEntries = allRev.filter { it.dateString in startDateStr..endDateStr }/g' app/src/main/java/com/example/ui/viewmodels/LedgerViewModel.kt
+sed -i 's/val expEntries = repository.getExpenseEntriesByMonth(monthStr).first()/val allExp = repository.getAllExpenseEntries(); val expEntries = allExp.filter { it.dateString in startDateStr..endDateStr }/g' app/src/main/java/com/example/ui/viewmodels/LedgerViewModel.kt
+sed -i 's/wsOverview.value(0, 0, "BAO CAO THANG $monthStr")/wsOverview.value(0, 0, "BAO CAO: $label")/g' app/src/main/java/com/example/ui/viewmodels/LedgerViewModel.kt
