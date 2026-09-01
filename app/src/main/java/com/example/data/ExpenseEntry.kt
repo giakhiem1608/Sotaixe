@@ -1,10 +1,12 @@
 package com.example.data
 
+import com.squareup.moshi.JsonClass
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
 import androidx.room.Index
 
+@JsonClass(generateAdapter = true)
 @Entity(
     tableName = "expense_entries",
     foreignKeys = [

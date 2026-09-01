@@ -2,6 +2,8 @@ package com.example.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -9,7 +11,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -159,16 +161,22 @@ fun TodayScreen(viewModel: LedgerViewModel) {
 
         // Revenue Breakdown
         if (totalRevenue == 0L) {
-            Text(
-                "Chưa có dữ liệu doanh thu hôm nay",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 24.dp),
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "Chưa có dữ liệu doanh thu hôm nay",
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         } else {
-            LazyColumn(modifier = Modifier.weight(1f)) {
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(bottom = 16.dp)
+            ) {
                 val breakdown = sources.map { source ->
                     val sourceRevenue = revenueEntries.filter { it.sourceId == source.id }.sumOf { it.amount }
                     val sourceTrips = revenueEntries.filter { it.sourceId == source.id }.sumOf { it.trips }
@@ -181,14 +189,12 @@ fun TodayScreen(viewModel: LedgerViewModel) {
                 }
             }
         }
-        
-        Spacer(modifier = Modifier.weight(1f, fill = false))
 
         // Action Buttons
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 16.dp),
+                .padding(top = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Button(
@@ -196,24 +202,26 @@ fun TodayScreen(viewModel: LedgerViewModel) {
                 modifier = Modifier
                     .weight(1f)
                     .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSecondaryContainer),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                ),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Icon(Icons.Filled.Add, contentDescription = null)
-                Spacer(modifier = Modifier.width(4.dp))
                 Text("CHI PHÍ", fontWeight = FontWeight.Bold)
             }
 
             Button(
                 onClick = { showAddRevenueSheet = true },
                 modifier = Modifier
-                    .weight(1.5f)
+                    .weight(1f)
                     .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Icon(Icons.Filled.Add, contentDescription = null)
-                Spacer(modifier = Modifier.width(4.dp))
                 Text("NHẬP DOANH THU", fontWeight = FontWeight.Bold)
             }
         }
@@ -302,7 +310,7 @@ fun AddRevenueSheet(
     ) {
         var selectedSourceId by remember { mutableStateOf(sources.firstOrNull()?.id ?: 0) }
         var amountStr by remember { mutableStateOf("") }
-        var tripsStr by remember { mutableStateOf("") }
+        var tripsStr by remember { mutableStateOf("1") }
         var note by remember { mutableStateOf("") }
         
         Column(
@@ -310,6 +318,7 @@ fun AddRevenueSheet(
                 .fillMaxWidth()
                 .padding(16.dp)
                 .padding(bottom = 32.dp)
+                .imePadding()
         ) {
             Text("Nhập doanh thu", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(16.dp))
@@ -384,7 +393,7 @@ fun AddRevenueSheet(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddExpenseSheet(
     categories: List<ExpenseCategory>,
@@ -406,29 +415,41 @@ fun AddExpenseSheet(
                 .fillMaxWidth()
                 .padding(16.dp)
                 .padding(bottom = 32.dp)
+                .imePadding()
         ) {
             Text("Nhập chi phí", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(16.dp))
             
             // Expense Category selector
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                categories.take(4).forEach { category ->
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                categories.forEach { category ->
                     FilterChip(
                         selected = selectedCategoryId == category.id,
                         onClick = { selectedCategoryId = category.id },
-                        label = { Text(category.name) }
-                    )
-                }
-            }
-            if (categories.size > 4) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    categories.drop(4).take(4).forEach { category ->
-                        FilterChip(
-                            selected = selectedCategoryId == category.id,
-                            onClick = { selectedCategoryId = category.id },
-                            label = { Text(category.name) }
+                        label = { Text(category.name) },
+                        leadingIcon = {
+                            val iconRes = when (category.iconName) {
+                                "battery_charging_full" -> Icons.Filled.BatteryChargingFull
+                                "restaurant" -> Icons.Filled.Restaurant
+                                "local_parking" -> Icons.Filled.LocalParking
+                                "add_road" -> Icons.Filled.AddRoad
+                                "local_car_wash" -> Icons.Filled.LocalCarWash
+                                "build" -> Icons.Filled.Build
+                                "phone_android" -> Icons.Filled.PhoneAndroid
+                                else -> Icons.Filled.MoreHoriz
+                            }
+                            Icon(iconRes, contentDescription = null, modifier = Modifier.size(18.dp))
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimaryContainer
                         )
-                    }
+                    )
                 }
             }
             

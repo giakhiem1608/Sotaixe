@@ -177,6 +177,80 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
             )
         }
     }
+
+    fun addRevenueSource(name: String, colorHex: String) {
+        viewModelScope.launch {
+            repository.insertRevenueSource(RevenueSource(name = name, colorHex = colorHex, isDefault = false, isActive = true))
+        }
+    }
+
+    fun hideRevenueSource(source: RevenueSource) {
+        viewModelScope.launch {
+            repository.updateRevenueSource(source.copy(isActive = false))
+        }
+    }
+
+    fun addExpenseCategory(name: String, iconName: String) {
+        viewModelScope.launch {
+            repository.insertExpenseCategory(ExpenseCategory(name = name, iconName = iconName, isDefault = false, isActive = true))
+        }
+    }
+
+    fun hideExpenseCategory(category: ExpenseCategory) {
+        viewModelScope.launch {
+            repository.updateExpenseCategory(category.copy(isActive = false))
+        }
+    }
+
+    // Backup & Restore
+    fun generateBackupData(onResult: (String?) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val data = BackupData(
+                    sources = repository.getAllRevenueSources(),
+                    categories = repository.getAllExpenseCategories(),
+                    revenueEntries = repository.getAllRevenueEntries(),
+                    expenseEntries = repository.getAllExpenseEntries(),
+                    goals = repository.getAllGoals()
+                )
+                val moshi = com.squareup.moshi.Moshi.Builder().build()
+                val adapter = moshi.adapter(BackupData::class.java)
+                onResult(adapter.toJson(data))
+            } catch (e: Exception) {
+                e.printStackTrace()
+                onResult(null)
+            }
+        }
+    }
+
+    fun restoreBackupData(json: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val moshi = com.squareup.moshi.Moshi.Builder().build()
+                val adapter = moshi.adapter(BackupData::class.java)
+                val data = adapter.fromJson(json)
+                if (data != null) {
+                    repository.clearRevenueSources()
+                    repository.clearExpenseCategories()
+                    repository.clearRevenueEntries()
+                    repository.clearExpenseEntries()
+                    repository.clearGoals()
+
+                    data.sources.forEach { repository.insertRevenueSource(it) }
+                    data.categories.forEach { repository.insertExpenseCategory(it) }
+                    data.revenueEntries.forEach { repository.insertRevenueEntry(it) }
+                    data.expenseEntries.forEach { repository.insertExpenseEntry(it) }
+                    data.goals.forEach { repository.insertGoal(it) }
+                    onResult(true)
+                } else {
+                    onResult(false)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                onResult(false)
+            }
+        }
+    }
 }
 
 class LedgerViewModelFactory(private val repository: LedgerRepository) : ViewModelProvider.Factory {
