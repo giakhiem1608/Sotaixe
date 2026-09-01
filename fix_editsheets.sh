@@ -1,0 +1,1 @@
+sed -i 's/import androidx.compose.foundation.rememberScrollStateimport androidx.compose.foundation.verticalScrollpackage com.example.ui.screens/package com.example.ui.screens\nimport androidx.compose.foundation.rememberScrollState\nimport androidx.compose.foundation.verticalScroll/g' app/src/main/java/com/example/ui/screens/EditSheets.kt

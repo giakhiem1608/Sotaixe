@@ -18,7 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.ColorExpense
+import com.example.ui.theme.ExpenseError
 import com.example.ui.theme.ColorGrab
 import com.example.ui.viewmodels.LedgerViewModel
 import com.example.utils.FormatUtils
@@ -252,7 +252,20 @@ fun ReportScreen(viewModel: LedgerViewModel) {
 
                     breakdown.forEach { (source, amount, trips) ->
                         val percent = if (totalRev > 0) (amount.toFloat() / totalRev.toFloat()) * 100 else 0f
-                        com.example.ui.screens.RevenueBreakdownItem(source, amount, trips, percent)
+                        val colorHex = source.colorHex.replace("#", "")
+                        val color = Color(android.graphics.Color.parseColor("#$colorHex"))
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(modifier = Modifier.size(12.dp).clip(RoundedCornerShape(6.dp)).background(color))
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(source.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                                Text("$trips cuốc • ${String.format("%.1f", percent)}%", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Text(FormatUtils.formatCurrency(amount), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        }
                     }
                 }
                 

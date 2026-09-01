@@ -1,4 +1,7 @@
 package com.example.ui.screens
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -44,7 +47,7 @@ fun EditRevenueSheet(
                 .fillMaxWidth()
                 .padding(16.dp)
                 .padding(bottom = 32.dp)
-                .imePadding()
+                .imePadding().verticalScroll(rememberScrollState())
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -166,7 +169,7 @@ fun EditExpenseSheet(
                 .fillMaxWidth()
                 .padding(16.dp)
                 .padding(bottom = 32.dp)
-                .imePadding()
+                .imePadding().verticalScroll(rememberScrollState())
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -191,7 +194,7 @@ fun EditExpenseSheet(
                         label = { Text(category.name) },
                         leadingIcon = {
                             val iconRes = when (category.iconName) {
-                                "battery_charging_full" -> Icons.Filled.BatteryChargingFull
+                                "ev_station" -> Icons.Filled.EvStation
                                 "restaurant" -> Icons.Filled.Restaurant
                                 "local_parking" -> Icons.Filled.LocalParking
                                 "add_road" -> Icons.Filled.AddRoad

@@ -1,0 +1,1 @@
+sed -i 's/import androidx.compose.foundation.borderpackage com.example.ui.screens/package com.example.ui.screens\nimport androidx.compose.foundation.border/g' app/src/main/java/com/example/ui/screens/OtherScreen.kt

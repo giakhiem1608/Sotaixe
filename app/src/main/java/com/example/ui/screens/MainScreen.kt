@@ -90,10 +90,10 @@ fun MainScreen(viewModel: LedgerViewModel) {
                 HistoryScreen(viewModel = viewModel)
             }
             composable(Screen.Report.route) {
-                ReportScreen(viewModel = viewModel)
+                com.example.ui.screens.ReportScreen(viewModel = viewModel)
             }
             composable(Screen.Other.route) {
-                OtherScreen(viewModel = viewModel)
+                com.example.ui.screens.OtherScreen(viewModel = viewModel)
             }
         }
     }

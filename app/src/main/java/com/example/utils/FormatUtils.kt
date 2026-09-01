@@ -14,6 +14,10 @@ object FormatUtils {
     private val dbMonthFormat = SimpleDateFormat("yyyy-MM", localeVN)
     private val dayOfWeekFormat = SimpleDateFormat("EEEE", localeVN)
 
+    fun formatTime(timestamp: Long): String {
+        val sdf = SimpleDateFormat("HH:mm", Locale("vi", "VN"))
+        return sdf.format(Date(timestamp))
+    }
     fun formatCurrency(amount: Long): String {
         return currencyFormat.format(amount).replace("₫", "đ").replace(" ", "").replace(",00", "")
     }

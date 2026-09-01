@@ -1,0 +1,1 @@
+sed -i 's/@Composable\nfun ManageSourcesDialog/@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)\n@Composable\nfun ManageSourcesDialog/g' app/src/main/java/com/example/ui/screens/OtherScreen.kt

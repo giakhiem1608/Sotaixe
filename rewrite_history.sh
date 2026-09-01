@@ -1,3 +1,4 @@
+cat << 'INNER_EOF' > app/src/main/java/com/example/ui/screens/HistoryScreen.kt
 package com.example.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
@@ -27,8 +28,8 @@ import com.example.utils.FormatUtils
 
 @Composable
 fun HistoryScreen(viewModel: LedgerViewModel) {
-    val revenueEntries by viewModel.historyRevenueEntries.collectAsState()
-    val expenseEntries by viewModel.historyExpenseEntries.collectAsState()
+    val revenueEntries by viewModel.revenueEntries.collectAsState()
+    val expenseEntries by viewModel.expenseEntries.collectAsState()
     val sources by viewModel.activeRevenueSources.collectAsState()
     val categories by viewModel.activeExpenseCategories.collectAsState()
     
@@ -281,3 +282,4 @@ fun ExpenseEntryItem(entry: ExpenseEntry, categories: List<ExpenseCategory>, onE
         }
     }
 }
+INNER_EOF
