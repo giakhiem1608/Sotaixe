@@ -40,6 +40,7 @@ fun OtherScreen(viewModel: LedgerViewModel) {
     var showExportDialog by remember { mutableStateOf(false) }
     var showManageSources by remember { mutableStateOf(false) }
     var showManageCategories by remember { mutableStateOf(false) }
+    var showThemeSettings by remember { mutableStateOf(false) }
     
     var showResetConfirmDialog by remember { mutableStateOf(false) }
     var showResetConfirmDialog2 by remember { mutableStateOf(false) }
@@ -111,6 +112,22 @@ fun OtherScreen(viewModel: LedgerViewModel) {
                     subtitle = "Thêm, sửa, ẩn loại chi phí",
                     icon = Icons.Default.Category,
                     onClick = { showManageCategories = true }
+                )
+            }
+        }
+        
+                Text("GIAO DIỆN", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp, start = 8.dp))
+        Card(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column {
+                SettingsMenuItem(
+                    title = "Card Thu nhập",
+                    subtitle = "Tùy chỉnh màu sắc Thu nhập hôm nay",
+                    icon = Icons.Default.Palette,
+                    onClick = { showThemeSettings = true }
                 )
             }
         }
@@ -214,6 +231,11 @@ fun OtherScreen(viewModel: LedgerViewModel) {
         ManageSourcesSheet(viewModel = viewModel, onDismiss = { showManageSources = false })
     }
     
+    
+    if (showThemeSettings) {
+        ThemeSettingsSheet(viewModel = viewModel, onDismiss = { showThemeSettings = false })
+    }
+
     if (showManageCategories) {
         ManageCategoriesSheet(viewModel = viewModel, onDismiss = { showManageCategories = false })
     }

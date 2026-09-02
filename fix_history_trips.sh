@@ -1,0 +1,2 @@
+sed -i '/val sum = revs.sumOf { it.amount }/a \                val tripsCount = revs.sumOf { it.trips }' app/src/main/java/com/example/ui/screens/HistoryScreen.kt
+sed -i 's/Text(source?.name ?: "Khác", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)/Text("${source?.name ?: "Khác"} ($tripsCount)", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)/' app/src/main/java/com/example/ui/screens/HistoryScreen.kt

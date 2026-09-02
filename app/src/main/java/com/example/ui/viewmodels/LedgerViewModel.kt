@@ -12,8 +12,15 @@ import java.util.Date
 
 class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
     val themeManager = ThemeManager(repository.sharedPreferences)
-    val revenueThemeColor = themeManager.revenueThemeColor
+    val cardBgColor = themeManager.cardBgColor
+    val incomeColor = themeManager.incomeColor
+    val revenueColor = themeManager.revenueColor
+    val expenseColor = themeManager.expenseColor
 
+    fun updateCardColors(bgHex: String, incomeHex: String, revHex: String, expHex: String) {
+        themeManager.setCardColors(bgHex, incomeHex, revHex, expHex)
+    }
+    
     // Current selected date for Today screen (default to today)
     private val _currentDate = MutableStateFlow(System.currentTimeMillis())
     val currentDate: StateFlow<Long> = _currentDate.asStateFlow()
@@ -404,8 +411,15 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
 
 class LedgerViewModelFactory(private val repository: LedgerRepository) : ViewModelProvider.Factory {
     val themeManager = ThemeManager(repository.sharedPreferences)
-    val revenueThemeColor = themeManager.revenueThemeColor
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+    val cardBgColor = themeManager.cardBgColor
+    val incomeColor = themeManager.incomeColor
+    val revenueColor = themeManager.revenueColor
+    val expenseColor = themeManager.expenseColor
+
+    fun updateCardColors(bgHex: String, incomeHex: String, revHex: String, expHex: String) {
+        themeManager.setCardColors(bgHex, incomeHex, revHex, expHex)
+    }
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(LedgerViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
             return LedgerViewModel(repository) as T

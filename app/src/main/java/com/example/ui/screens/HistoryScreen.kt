@@ -175,11 +175,12 @@ fun DayHistoryCard(
             sourceMap.forEach { (sourceId, revs) ->
                 val source = sources.find { it.id == sourceId }
                 val sum = revs.sumOf { it.amount }
+                val tripsCount = revs.sumOf { it.trips }
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(source?.name ?: "Khác", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("${source?.name ?: "Khác"} ($tripsCount)", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(FormatUtils.formatCurrency(sum), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
                 }
             }

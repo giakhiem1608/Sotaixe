@@ -41,19 +41,21 @@ fun TodayScreen(viewModel: LedgerViewModel) {
     val totalRevenue by viewModel.todaysTotalRevenue.collectAsState()
     val totalExpense by viewModel.todaysTotalExpense.collectAsState()
     val totalTrips by viewModel.todaysTotalTrips.collectAsState()
+    val totalDistance by viewModel.todaysTotalDistance.collectAsState()
     val netIncome by viewModel.todaysNetIncome.collectAsState()
-    val revenueThemeColorHex by viewModel.revenueThemeColor.collectAsState()
-    val revenueThemeColor = try { Color(android.graphics.Color.parseColor(revenueThemeColorHex)) } catch (e: Exception) { MaterialTheme.colorScheme.primaryContainer }
-    val onRevenueThemeColor = if (revenueThemeColor.luminance() > 0.5f) Color.Black else Color.White
-    var showThemePicker by remember { mutableStateOf(false) }
+    val cardBgColorHex by viewModel.cardBgColor.collectAsState()
+    val incomeColorHex by viewModel.incomeColor.collectAsState()
+    val revenueColorHex by viewModel.revenueColor.collectAsState()
+    val expenseColorHex by viewModel.expenseColor.collectAsState()
+    
+    val cardBgColor = try { Color(android.graphics.Color.parseColor(cardBgColorHex)) } catch (e: Exception) { MaterialTheme.colorScheme.primaryContainer }
+    val onCardBgColor = if (cardBgColor.luminance() > 0.5f) Color.Black else Color.White
+    
+    val incomeColor = if (incomeColorHex.isNotEmpty()) try { Color(android.graphics.Color.parseColor(incomeColorHex)) } catch (e: Exception) { onCardBgColor } else onCardBgColor
+    val revenueColor = if (revenueColorHex.isNotEmpty()) try { Color(android.graphics.Color.parseColor(revenueColorHex)) } catch (e: Exception) { onCardBgColor } else onCardBgColor
+    val expColor = if (expenseColorHex.isNotEmpty()) try { Color(android.graphics.Color.parseColor(expenseColorHex)) } catch (e: Exception) { ExpenseError } else ExpenseError
 
-    if (showThemePicker) {
-        ThemeColorPickerSheet(
-            currentColor = revenueThemeColorHex,
-            onColorSelected = { viewModel.themeManager.setRevenueThemeColor(it) },
-            onDismiss = { showThemePicker = false }
-        )
-    }
+    
     
     val revenueEntries by viewModel.todaysRevenueEntries.collectAsState()
     val sources by viewModel.activeRevenueSources.collectAsState()
@@ -107,8 +109,8 @@ fun TodayScreen(viewModel: LedgerViewModel) {
 
         // Hero Card (Compacted)
         Card(
-            modifier = Modifier.fillMaxWidth().pointerInput(Unit) { detectTapGestures(onLongPress = { showThemePicker = true }) },
-            colors = CardDefaults.cardColors(containerColor = revenueThemeColor),
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = cardBgColor),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             shape = RoundedCornerShape(20.dp)
         ) {
@@ -121,14 +123,14 @@ fun TodayScreen(viewModel: LedgerViewModel) {
                 Text(
                     text = "THU NHẬP HÔM NAY",
                     style = MaterialTheme.typography.labelMedium,
-                    color = onRevenueThemeColor.copy(alpha = 0.8f)
+                    color = onCardBgColor.copy(alpha = 0.8f)
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = FormatUtils.formatCurrency(netIncome),
                     style = MaterialTheme.typography.displaySmall.copy(fontSize = 32.sp),
                     fontWeight = FontWeight.Bold,
-                    color = onRevenueThemeColor
+                    color = incomeColor
                 )
                 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -138,24 +140,24 @@ fun TodayScreen(viewModel: LedgerViewModel) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column(horizontalAlignment = Alignment.Start) {
-                        Text("Doanh thu", style = MaterialTheme.typography.bodySmall, color = onRevenueThemeColor.copy(alpha = 0.8f))
-                        Text(FormatUtils.formatCurrency(totalRevenue), fontWeight = FontWeight.Bold, color = onRevenueThemeColor)
+                        Text("Doanh thu", style = MaterialTheme.typography.bodySmall, color = onCardBgColor.copy(alpha = 0.8f))
+                        Text(FormatUtils.formatCurrency(totalRevenue), fontWeight = FontWeight.Bold, color = revenueColor)
                     }
                     Column(horizontalAlignment = Alignment.End) {
-                        Text("Chi phí", style = MaterialTheme.typography.bodySmall, color = onRevenueThemeColor.copy(alpha = 0.8f))
-                        Text(FormatUtils.formatCurrency(totalExpense), fontWeight = FontWeight.Bold, color = if (totalExpense > 0) ExpenseError else onRevenueThemeColor.copy(alpha = 0.8f))
+                        Text("Chi phí", style = MaterialTheme.typography.bodySmall, color = onCardBgColor.copy(alpha = 0.8f))
+                        Text(FormatUtils.formatCurrency(totalExpense), fontWeight = FontWeight.Bold, color = if (totalExpense > 0) expColor else onCardBgColor.copy(alpha = 0.8f))
                     }
                 }
                 
                 Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(color = onRevenueThemeColor.copy(alpha = 0.2f))
+                HorizontalDivider(color = onCardBgColor.copy(alpha = 0.2f))
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 val avgRevenue = if (totalTrips > 0) totalRevenue / totalTrips else 0L
                 Text(
-                    text = if (totalTrips > 0) "$totalTrips cuốc • TB ${FormatUtils.formatCurrency(avgRevenue)}/cuốc" else "Chưa có cuốc nào",
+                    text = if (totalTrips > 0) { if (totalDistance > 0f) "$totalTrips cuốc • ${String.format("%.1f", totalDistance).replace(".0", "").replace(".", ",")} km • TB ${FormatUtils.formatCurrency(avgRevenue)}/cuốc" else "$totalTrips cuốc • TB ${FormatUtils.formatCurrency(avgRevenue)}/cuốc" } else "Chưa có cuốc nào",
                     style = MaterialTheme.typography.bodySmall,
-                    color = onRevenueThemeColor.copy(alpha = 0.8f)
+                    color = onCardBgColor.copy(alpha = 0.8f)
                 )
             }
         }
@@ -283,6 +285,7 @@ fun AddRevenueSheet(
         var selectedSourceId by remember { mutableStateOf(sources.firstOrNull()?.id ?: 0) }
         var amountStr by remember { mutableStateOf("") }
         var tripsStr by remember { mutableStateOf("1") }
+        var distanceStr by remember { mutableStateOf("") }
         var note by remember { mutableStateOf("") }
         
         Column(
@@ -338,6 +341,17 @@ fun AddRevenueSheet(
             Spacer(modifier = Modifier.height(8.dp))
             
             OutlinedTextField(
+                value = distanceStr,
+                onValueChange = { distanceStr = it.replace(",", ".") },
+                label = { Text("Số km (Không bắt buộc)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            OutlinedTextField(
                 value = note,
                 onValueChange = { note = it },
                 label = { Text("Ghi chú (Tùy chọn)") },
@@ -352,7 +366,7 @@ fun AddRevenueSheet(
                     val amount = amountStr.replace(Regex("[^0-9]"), "").toLongOrNull()
                     val trips = tripsStr.toIntOrNull()
                     if (amount != null && trips != null && trips >= 1 && selectedSourceId != 0) {
-                        onSave(selectedSourceId, amount, trips, null, null, note)
+                        onSave(selectedSourceId, amount, trips, null, distanceStr.toFloatOrNull(), note)
                     }
                 },
                 modifier = Modifier

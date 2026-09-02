@@ -59,10 +59,10 @@ fun FilterableTransactionList(
                     val contentColor = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                     
                     val label = when (filterKey) {
-                        "Tất cả" -> "Tất cả (${revenues.size})"
+                        "Tất cả" -> "Tất cả (${revenues.sumOf { it.trips }})"
                         "Chi phí" -> "Chi phí (${expenses.size})"
                         else -> {
-                            val count = revenues.count { r -> sources.find { it.id == r.sourceId }?.name == filterKey }
+                            val count = revenues.filter { r -> sources.find { it.id == r.sourceId }?.name == filterKey }.sumOf { it.trips }
                             "$filterKey ($count)"
                         }
                     }

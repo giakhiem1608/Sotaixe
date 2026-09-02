@@ -1,0 +1,3 @@
+sed -i '/val totalTrips by viewModel.todaysTotalTrips.collectAsState()/a \    val totalDistance by viewModel.todaysTotalDistance.collectAsState()' app/src/main/java/com/example/ui/screens/TodayScreen.kt
+
+sed -i 's/text = if (totalTrips > 0) "$totalTrips cuốc • TB ${FormatUtils.formatCurrency(avgRevenue)}\/cuốc" else "Chưa có cuốc nào",/text = if (totalTrips > 0) { if (totalDistance > 0f) "$totalTrips cuốc • ${String.format("%.1f", totalDistance).replace(".0", "").replace(".", ",")} km • TB ${FormatUtils.formatCurrency(avgRevenue)}\/cuốc" else "$totalTrips cuốc • TB ${FormatUtils.formatCurrency(avgRevenue)}\/cuốc" } else "Chưa có cuốc nào",/g' app/src/main/java/com/example/ui/screens/TodayScreen.kt

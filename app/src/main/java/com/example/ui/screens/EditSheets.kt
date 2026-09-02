@@ -40,6 +40,7 @@ fun EditRevenueSheet(
         var selectedSourceId by remember { mutableStateOf(entry.sourceId) }
         var amountStr by remember { mutableStateOf(entry.amount.toString()) }
         var tripsStr by remember { mutableStateOf(entry.trips.toString()) }
+        var distanceStr by remember { mutableStateOf(entry.distanceKm?.toString() ?: "") }
         var note by remember { mutableStateOf(entry.note) }
         
         Column(
@@ -80,6 +81,17 @@ fun EditRevenueSheet(
                 value = tripsStr,
                 onValueChange = { tripsStr = it },
                 label = { Text("Số cuốc") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            OutlinedTextField(
+                value = distanceStr,
+                onValueChange = { distanceStr = it.replace(",", ".") },
+                label = { Text("Số km (Không bắt buộc)") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
