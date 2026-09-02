@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+
 import com.example.ui.theme.ExpenseError
 import com.example.ui.viewmodels.LedgerViewModel
 import kotlinx.coroutines.launch
@@ -30,6 +31,8 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+
+const val APP_VERSION = "1.0"
 
 @Composable
 fun OtherScreen(viewModel: LedgerViewModel) {
@@ -76,7 +79,6 @@ fun OtherScreen(viewModel: LedgerViewModel) {
                     viewModel.restoreBackupData(json) { success ->
                         if(success) {  } else { coroutineScope.launch { Toast.makeText(context, "Lỗi khôi phục", Toast.LENGTH_SHORT).show() } }
                     }
-                    
                 }
             } catch (e: Exception) {
                 coroutineScope.launch { Toast.makeText(context, "Lỗi đọc file", Toast.LENGTH_SHORT).show() }
@@ -85,15 +87,9 @@ fun OtherScreen(viewModel: LedgerViewModel) {
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState())
+        modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())
     ) {
-        Text("Cài đặt", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 24.dp, top = 8.dp))
-        
-        Text("QUẢN LÝ", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp, start = 8.dp))
+        Text("GIAO DỊCH", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp, start = 8.dp))
         Card(
             modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -116,7 +112,7 @@ fun OtherScreen(viewModel: LedgerViewModel) {
             }
         }
         
-                Text("GIAO DIỆN", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp, start = 8.dp))
+        Text("GIAO DIỆN", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp, start = 8.dp))
         Card(
             modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -182,6 +178,20 @@ fun OtherScreen(viewModel: LedgerViewModel) {
                 )
             }
         }
+        
+        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("🚗 Made for drivers • ", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("LHN", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                Text("  ·  v$APP_VERSION", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
     }
     
     if (showResetConfirmDialog) {
@@ -231,11 +241,10 @@ fun OtherScreen(viewModel: LedgerViewModel) {
         ManageSourcesSheet(viewModel = viewModel, onDismiss = { showManageSources = false })
     }
     
-    
     if (showThemeSettings) {
         ThemeSettingsSheet(viewModel = viewModel, onDismiss = { showThemeSettings = false })
     }
-
+    
     if (showManageCategories) {
         ManageCategoriesSheet(viewModel = viewModel, onDismiss = { showManageCategories = false })
     }
@@ -271,5 +280,3 @@ fun SettingsMenuItem(title: String, subtitle: String, icon: ImageVector, onClick
         Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
-
-
