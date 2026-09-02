@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -31,6 +32,8 @@ import com.example.ui.theme.*
 import com.example.ui.viewmodels.LedgerViewModel
 import com.example.utils.FormatUtils
 
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun TodayScreen(viewModel: LedgerViewModel) {
@@ -39,6 +42,18 @@ fun TodayScreen(viewModel: LedgerViewModel) {
     val totalExpense by viewModel.todaysTotalExpense.collectAsState()
     val totalTrips by viewModel.todaysTotalTrips.collectAsState()
     val netIncome by viewModel.todaysNetIncome.collectAsState()
+    val revenueThemeColorHex by viewModel.revenueThemeColor.collectAsState()
+    val revenueThemeColor = try { Color(android.graphics.Color.parseColor(revenueThemeColorHex)) } catch (e: Exception) { MaterialTheme.colorScheme.primaryContainer }
+    val onRevenueThemeColor = if (revenueThemeColor.luminance() > 0.5f) Color.Black else Color.White
+    var showThemePicker by remember { mutableStateOf(false) }
+
+    if (showThemePicker) {
+        ThemeColorPickerSheet(
+            currentColor = revenueThemeColorHex,
+            onColorSelected = { viewModel.themeManager.setRevenueThemeColor(it) },
+            onDismiss = { showThemePicker = false }
+        )
+    }
     
     val revenueEntries by viewModel.todaysRevenueEntries.collectAsState()
     val sources by viewModel.activeRevenueSources.collectAsState()
@@ -92,8 +107,8 @@ fun TodayScreen(viewModel: LedgerViewModel) {
 
         // Hero Card (Compacted)
         Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+            modifier = Modifier.fillMaxWidth().pointerInput(Unit) { detectTapGestures(onLongPress = { showThemePicker = true }) },
+            colors = CardDefaults.cardColors(containerColor = revenueThemeColor),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             shape = RoundedCornerShape(20.dp)
         ) {
@@ -106,14 +121,14 @@ fun TodayScreen(viewModel: LedgerViewModel) {
                 Text(
                     text = "THU NHẬP HÔM NAY",
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary
+                    color = onRevenueThemeColor.copy(alpha = 0.8f)
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = FormatUtils.formatCurrency(netIncome),
                     style = MaterialTheme.typography.displaySmall.copy(fontSize = 32.sp),
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    color = onRevenueThemeColor
                 )
                 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -123,24 +138,24 @@ fun TodayScreen(viewModel: LedgerViewModel) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column(horizontalAlignment = Alignment.Start) {
-                        Text("Doanh thu", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(FormatUtils.formatCurrency(totalRevenue), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        Text("Doanh thu", style = MaterialTheme.typography.bodySmall, color = onRevenueThemeColor.copy(alpha = 0.8f))
+                        Text(FormatUtils.formatCurrency(totalRevenue), fontWeight = FontWeight.Bold, color = onRevenueThemeColor)
                     }
                     Column(horizontalAlignment = Alignment.End) {
-                        Text("Chi phí", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(FormatUtils.formatCurrency(totalExpense), fontWeight = FontWeight.Bold, color = if (totalExpense > 0) ExpenseError else MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Chi phí", style = MaterialTheme.typography.bodySmall, color = onRevenueThemeColor.copy(alpha = 0.8f))
+                        Text(FormatUtils.formatCurrency(totalExpense), fontWeight = FontWeight.Bold, color = if (totalExpense > 0) ExpenseError else onRevenueThemeColor.copy(alpha = 0.8f))
                     }
                 }
                 
                 Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                HorizontalDivider(color = onRevenueThemeColor.copy(alpha = 0.2f))
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 val avgRevenue = if (totalTrips > 0) totalRevenue / totalTrips else 0L
                 Text(
                     text = if (totalTrips > 0) "$totalTrips cuốc • TB ${FormatUtils.formatCurrency(avgRevenue)}/cuốc" else "Chưa có cuốc nào",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    color = onRevenueThemeColor.copy(alpha = 0.8f)
                 )
             }
         }

@@ -27,11 +27,12 @@ fun FilterableTransactionList(
     onEditExpense: (ExpenseEntry) -> Unit
 ) {
     var selectedFilter by remember { mutableStateOf("Tất cả") }
-    val filterOptions = mutableListOf("Tất cả")
+    
+    val filterKeys = mutableListOf("Tất cả")
     val presentSources = revenues.mapNotNull { r -> sources.find { it.id == r.sourceId }?.name }.distinct()
-    filterOptions.addAll(presentSources)
+    filterKeys.addAll(presentSources)
     if (expenses.isNotEmpty()) {
-        filterOptions.add("Chi phí")
+        filterKeys.add("Chi phí")
     }
 
     val filteredRevenues = if (selectedFilter == "Tất cả") revenues else if (selectedFilter == "Chi phí") emptyList() else revenues.filter { r -> sources.find { it.id == r.sourceId }?.name == selectedFilter }
@@ -43,19 +44,29 @@ fun FilterableTransactionList(
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f), shape = RoundedCornerShape(8.dp))
             .padding(12.dp)
     ) {
-        if (filterOptions.size > 1) {
+        if (filterKeys.size > 1) {
             ScrollableTabRow(
-                selectedTabIndex = filterOptions.indexOf(selectedFilter),
+                selectedTabIndex = filterKeys.indexOf(selectedFilter).takeIf { it >= 0 } ?: 0,
                 modifier = Modifier.padding(bottom = 12.dp).height(40.dp),
                 edgePadding = 0.dp,
                 indicator = {}, 
                 divider = {},
                 containerColor = androidx.compose.ui.graphics.Color.Transparent
             ) {
-                filterOptions.forEachIndexed { index, title ->
-                    val selected = selectedFilter == title
+                filterKeys.forEach { filterKey ->
+                    val selected = selectedFilter == filterKey
                     val bgColor = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
                     val contentColor = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                    
+                    val label = when (filterKey) {
+                        "Tất cả" -> "Tất cả (${revenues.size})"
+                        "Chi phí" -> "Chi phí (${expenses.size})"
+                        else -> {
+                            val count = revenues.count { r -> sources.find { it.id == r.sourceId }?.name == filterKey }
+                            "$filterKey ($count)"
+                        }
+                    }
+
                     Surface(
                         modifier = Modifier.padding(end = 8.dp),
                         shape = RoundedCornerShape(16.dp),
@@ -63,8 +74,8 @@ fun FilterableTransactionList(
                         border = if (!selected) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null
                     ) {
                         Text(
-                            text = title,
-                            modifier = Modifier.clickable { selectedFilter = title }.padding(horizontal = 16.dp, vertical = 8.dp),
+                            text = label,
+                            modifier = Modifier.clickable { selectedFilter = filterKey }.padding(horizontal = 16.dp, vertical = 8.dp),
                             style = MaterialTheme.typography.labelMedium,
                             color = contentColor
                         )

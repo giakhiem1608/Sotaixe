@@ -11,6 +11,8 @@ import java.util.Calendar
 import java.util.Date
 
 class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
+    val themeManager = ThemeManager(repository.sharedPreferences)
+    val revenueThemeColor = themeManager.revenueThemeColor
 
     // Current selected date for Today screen (default to today)
     private val _currentDate = MutableStateFlow(System.currentTimeMillis())
@@ -401,6 +403,8 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
 }
 
 class LedgerViewModelFactory(private val repository: LedgerRepository) : ViewModelProvider.Factory {
+    val themeManager = ThemeManager(repository.sharedPreferences)
+    val revenueThemeColor = themeManager.revenueThemeColor
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(LedgerViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")

@@ -1,4 +1,8 @@
-sed -i 's/val breakdown = sources.map { source ->/val breakdownList = sources.map { source ->/g' app/src/main/java/com/example/ui/screens/TodayScreen.kt
-sed -i '/Row(modifier = Modifier.fillMaxWidth().height(12.dp).clip(RoundedCornerShape(6.dp))) {/,/}/d' app/src/main/java/com/example/ui/screens/TodayScreen.kt
-sed -i '/LazyColumn(/,/}/d' app/src/main/java/com/example/ui/screens/TodayScreen.kt
-sed -i 's/breakdownList.forEach/breakdown.forEach/g' app/src/main/java/com/example/ui/screens/TodayScreen.kt
+sed -i 's/@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)/import androidx.compose.foundation.gestures.detectTapGestures\nimport androidx.compose.ui.input.pointer.pointerInput\nimport androidx.compose.ui.graphics.luminance\n@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)/g' app/src/main/java/com/example/ui/screens/TodayScreen.kt
+
+sed -i '/val netIncome by viewModel.todaysNetIncome.collectAsState()/a \    val revenueThemeColorHex by viewModel.revenueThemeColor.collectAsState()\n    val revenueThemeColor = try { Color(android.graphics.Color.parseColor(revenueThemeColorHex)) } catch (e: Exception) { MaterialTheme.colorScheme.primaryContainer }\n    val onRevenueThemeColor = if (revenueThemeColor.luminance() > 0.5f) Color.Black else Color.White\n    var showThemePicker by remember { mutableStateOf(false) }\n\n    if (showThemePicker) {\n        ThemeColorPickerSheet(\n            currentColor = revenueThemeColorHex,\n            onColorSelected = { viewModel.themeManager.setRevenueThemeColor(it) },\n            onDismiss = { showThemePicker = false }\n        )\n    }' app/src/main/java/com/example/ui/screens/TodayScreen.kt
+
+sed -i 's/modifier = Modifier.fillMaxWidth(),/modifier = Modifier.fillMaxWidth().pointerInput(Unit) { detectTapGestures(onLongPress = { showThemePicker = true }) },/g' app/src/main/java/com/example/ui/screens/TodayScreen.kt
+
+sed -i 's/colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),/colors = CardDefaults.cardColors(containerColor = revenueThemeColor),/g' app/src/main/java/com/example/ui/screens/TodayScreen.kt
+

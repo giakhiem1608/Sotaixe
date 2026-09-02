@@ -2,7 +2,9 @@ package com.example.data
 
 import kotlinx.coroutines.flow.Flow
 
-class LedgerRepository(private val dao: LedgerDao) {
+import android.content.SharedPreferences
+
+class LedgerRepository(private val dao: LedgerDao, val sharedPreferences: SharedPreferences? = null) {
     // Revenue Sources
     val activeRevenueSources: Flow<List<RevenueSource>> = dao.getActiveRevenueSources()
 

@@ -10,6 +10,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +39,9 @@ fun ReportScreen(viewModel: LedgerViewModel) {
     val totalRev = revenueEntries.sumOf { it.amount }
     val totalExp = expenseEntries.sumOf { it.amount }
     val netIncome = totalRev - totalExp
+    val revenueThemeColorHex by viewModel.revenueThemeColor.collectAsState()
+    val revenueThemeColor = try { Color(android.graphics.Color.parseColor(revenueThemeColorHex)) } catch (e: Exception) { MaterialTheme.colorScheme.primaryContainer }
+    val onRevenueThemeColor = if (revenueThemeColor.luminance() > 0.5f) Color.Black else Color.White
     val totalTrips = revenueEntries.sumOf { it.trips }
     val daysWorked = revenueEntries.map { it.dateString }.distinct().size
     
@@ -107,7 +111,7 @@ fun ReportScreen(viewModel: LedgerViewModel) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f))
                                 ) {
-                                    Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(percent).background(MaterialTheme.colorScheme.primary))
+                                    Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(percent).background(revenueThemeColor))
                                 }
                                 
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -140,30 +144,30 @@ fun ReportScreen(viewModel: LedgerViewModel) {
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                        colors = CardDefaults.cardColors(containerColor = revenueThemeColor)
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text("Tổng thu nhập", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                            Text("Tổng thu nhập", style = MaterialTheme.typography.labelLarge, color = onRevenueThemeColor.copy(alpha = 0.8f))
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = FormatUtils.formatCurrency(netIncome),
                                 style = MaterialTheme.typography.displaySmall.copy(fontSize = 32.sp),
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                color = onRevenueThemeColor
                             )
                             
                             Spacer(modifier = Modifier.height(16.dp))
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Column(horizontalAlignment = Alignment.Start) {
-                                    Text("Doanh thu", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Text(FormatUtils.formatCurrency(totalRev), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                    Text("Doanh thu", style = MaterialTheme.typography.bodySmall, color = onRevenueThemeColor.copy(alpha = 0.8f))
+                                    Text(FormatUtils.formatCurrency(totalRev), fontWeight = FontWeight.Bold, color = onRevenueThemeColor)
                                 }
                                 Column(horizontalAlignment = Alignment.End) {
-                                    Text("Chi phí", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Text(FormatUtils.formatCurrency(totalExp), fontWeight = FontWeight.Bold, color = if (totalExp > 0) ExpenseError else MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text("Chi phí", style = MaterialTheme.typography.bodySmall, color = onRevenueThemeColor.copy(alpha = 0.8f))
+                                    Text(FormatUtils.formatCurrency(totalExp), fontWeight = FontWeight.Bold, color = if (totalExp > 0) ExpenseError else onRevenueThemeColor.copy(alpha = 0.8f))
                                 }
                             }
                         }

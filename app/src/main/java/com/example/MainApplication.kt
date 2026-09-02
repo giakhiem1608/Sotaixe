@@ -6,5 +6,5 @@ import com.example.data.LedgerRepository
 
 class MainApplication : Application() {
     val database by lazy { LedgerDatabase.getDatabase(this) }
-    val repository by lazy { LedgerRepository(database.ledgerDao()) }
+    val repository by lazy { LedgerRepository(database.ledgerDao(), getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE)) }
 }
