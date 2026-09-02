@@ -9,6 +9,9 @@ class LedgerRepository(private val dao: LedgerDao) {
     suspend fun insertRevenueSource(source: RevenueSource) {
         dao.insertRevenueSource(source)
     }
+    fun getAllRevenueSourcesFlow() = dao.getAllRevenueSourcesFlow()
+    fun getAllExpenseCategoriesFlow() = dao.getAllExpenseCategoriesFlow()
+
 
     suspend fun updateRevenueSource(source: RevenueSource) {
         dao.updateRevenueSource(source)
@@ -42,6 +45,9 @@ class LedgerRepository(private val dao: LedgerDao) {
         dao.updateRevenueEntry(entry)
     }
 
+    suspend fun countRevenueEntries(sourceId: Int) = dao.countRevenueEntries(sourceId)
+    suspend fun deleteRevenueSource(source: RevenueSource) = dao.deleteRevenueSource(source)
+
     suspend fun deleteRevenueEntry(id: Int) {
         dao.deleteRevenueEntry(id)
     }
@@ -62,6 +68,9 @@ class LedgerRepository(private val dao: LedgerDao) {
     suspend fun updateExpenseEntry(entry: ExpenseEntry) {
         dao.updateExpenseEntry(entry)
     }
+
+    suspend fun countExpenseEntries(categoryId: Int) = dao.countExpenseEntries(categoryId)
+    suspend fun deleteExpenseCategory(category: ExpenseCategory) = dao.deleteExpenseCategory(category)
 
     suspend fun deleteExpenseEntry(id: Int) {
         dao.deleteExpenseEntry(id)

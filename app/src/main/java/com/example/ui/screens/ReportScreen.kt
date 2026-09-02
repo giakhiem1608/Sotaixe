@@ -28,7 +28,7 @@ fun ReportScreen(viewModel: LedgerViewModel) {
     val currentMonthStr by viewModel.currentMonth.collectAsState()
     val revenueEntries by viewModel.historyRevenueEntries.collectAsState()
     val expenseEntries by viewModel.historyExpenseEntries.collectAsState()
-    val sources by viewModel.activeRevenueSources.collectAsState()
+    val sources by viewModel.allRevenueSources.collectAsState()
     
     val displayMonth = remember(currentMonthStr) {
         val date = FormatUtils.parseDbMonth(currentMonthStr)

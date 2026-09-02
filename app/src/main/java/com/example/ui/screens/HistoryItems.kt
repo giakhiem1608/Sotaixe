@@ -35,7 +35,6 @@ fun RevenueEntryItem(entry: RevenueEntry, sources: List<RevenueSource>, onEdit: 
                 Text("${entry.trips} cuốc • ${FormatUtils.formatTime(entry.timestamp)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Text(FormatUtils.formatCurrency(entry.amount), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-            Icon(Icons.Filled.Edit, contentDescription = "Sửa", modifier = Modifier.padding(start = 12.dp).size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
     }
@@ -59,7 +58,6 @@ fun ExpenseEntryItem(entry: ExpenseEntry, categories: List<ExpenseCategory>, onE
                 Text(FormatUtils.formatTime(entry.timestamp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Text("- " + FormatUtils.formatCurrency(entry.amount), fontWeight = FontWeight.Bold, color = ExpenseError)
-            Icon(Icons.Filled.Edit, contentDescription = "Sửa", modifier = Modifier.padding(start = 12.dp).size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
     }

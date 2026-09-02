@@ -32,6 +32,9 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
     val todaysRevenueEntries: StateFlow<List<RevenueEntry>> = currentDateString.flatMapLatest { dateStr ->
         repository.getRevenueEntriesByDate(dateStr)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val allRevenueSources: StateFlow<List<RevenueSource>> = repository.getAllRevenueSourcesFlow().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val allExpenseCategories: StateFlow<List<ExpenseCategory>> = repository.getAllExpenseCategoriesFlow().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val todaysExpenseEntries: StateFlow<List<ExpenseEntry>> = currentDateString.flatMapLatest { dateStr ->
@@ -197,6 +200,16 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
         }
     }
 
+    fun deleteRevenueSource(source: RevenueSource) {
+        viewModelScope.launch {
+            if (repository.countRevenueEntries(source.id) > 0) {
+                repository.updateRevenueSource(source.copy(isActive = false))
+            } else {
+                repository.deleteRevenueSource(source)
+            }
+        }
+    }
+
     fun hideRevenueSource(source: RevenueSource) {
         viewModelScope.launch {
             repository.updateRevenueSource(source.copy(isActive = false))
@@ -206,6 +219,16 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
     fun addExpenseCategory(name: String, iconName: String) {
         viewModelScope.launch {
             repository.insertExpenseCategory(ExpenseCategory(name = name, iconName = iconName, isDefault = false, isActive = true))
+        }
+    }
+
+    fun deleteExpenseCategory(category: ExpenseCategory) {
+        viewModelScope.launch {
+            if (repository.countExpenseEntries(category.id) > 0) {
+                repository.updateExpenseCategory(category.copy(isActive = false))
+            } else {
+                repository.deleteExpenseCategory(category)
+            }
         }
     }
 

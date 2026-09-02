@@ -28,8 +28,8 @@ import com.example.utils.FormatUtils
 fun HistoryScreen(viewModel: LedgerViewModel) {
     val revenueEntries by viewModel.historyRevenueEntries.collectAsState()
     val expenseEntries by viewModel.historyExpenseEntries.collectAsState()
-    val sources by viewModel.activeRevenueSources.collectAsState()
-    val categories by viewModel.activeExpenseCategories.collectAsState()
+    val sources by viewModel.allRevenueSources.collectAsState()
+    val categories by viewModel.allExpenseCategories.collectAsState()
     
     var editingRevenue by remember { mutableStateOf<RevenueEntry?>(null) }
     var editingExpense by remember { mutableStateOf<ExpenseEntry?>(null) }
@@ -213,29 +213,7 @@ fun DayHistoryCard(
 
             // Expanded Content (Individual Entries)
             AnimatedVisibility(visible = expanded) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f), shape = RoundedCornerShape(8.dp))
-                        .padding(12.dp)
-                ) {
-                    if (revenues.isNotEmpty()) {
-                        Text("Doanh thu", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        revenues.sortedByDescending { it.id }.forEach { entry ->
-                            RevenueEntryItem(entry, sources, onEditRevenue)
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
-                    
-                    if (expenses.isNotEmpty()) {
-                        Text("Chi phí", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        expenses.sortedByDescending { it.id }.forEach { entry ->
-                            ExpenseEntryItem(entry, categories, onEditExpense)
-                        }
-                    }
-                }
+                FilterableTransactionList(revenues, expenses, sources, categories, onEditRevenue, onEditExpense)
             }
         }
     }

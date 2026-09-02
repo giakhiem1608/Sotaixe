@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface LedgerDao {
     // Revenue Sources
+    @Query("SELECT * FROM revenue_sources")
+    fun getAllRevenueSourcesFlow(): Flow<List<RevenueSource>>
     @Query("SELECT * FROM revenue_sources WHERE isActive = 1 ORDER BY isDefault DESC, name ASC")
     fun getActiveRevenueSources(): Flow<List<RevenueSource>>
 
@@ -21,6 +23,9 @@ interface LedgerDao {
     suspend fun updateRevenueSource(source: RevenueSource)
 
     // Expense Categories
+    @Query("SELECT * FROM expense_categories")
+    fun getAllExpenseCategoriesFlow(): Flow<List<ExpenseCategory>>
+
     @Query("SELECT * FROM expense_categories WHERE isActive = 1 ORDER BY isDefault DESC, name ASC")
     fun getActiveExpenseCategories(): Flow<List<ExpenseCategory>>
 
@@ -43,9 +48,14 @@ interface LedgerDao {
     @Update
     suspend fun updateRevenueEntry(entry: RevenueEntry)
 
+    @Query("SELECT COUNT(*) FROM revenue_entries WHERE sourceId = :sourceId")
+    suspend fun countRevenueEntries(sourceId: Int): Int
+
+    @Delete
+    suspend fun deleteRevenueSource(source: RevenueSource)
+
     @Query("DELETE FROM revenue_entries WHERE id = :id")
     suspend fun deleteRevenueEntry(id: Int)
-
     // Expense Entries
     @Query("SELECT * FROM expense_entries WHERE dateString = :dateString ORDER BY timestamp DESC")
     fun getExpenseEntriesByDate(dateString: String): Flow<List<ExpenseEntry>>
@@ -59,10 +69,14 @@ interface LedgerDao {
     @Update
     suspend fun updateExpenseEntry(entry: ExpenseEntry)
 
+    @Query("SELECT COUNT(*) FROM expense_entries WHERE categoryId = :categoryId")
+    suspend fun countExpenseEntries(categoryId: Int): Int
+
+    @Delete
+    suspend fun deleteExpenseCategory(category: ExpenseCategory)
+
     @Query("DELETE FROM expense_entries WHERE id = :id")
     suspend fun deleteExpenseEntry(id: Int)
-
-    // Goals
     @Query("SELECT * FROM goals WHERE monthString = :monthString")
     fun getGoalByMonth(monthString: String): Flow<Goal?>
 

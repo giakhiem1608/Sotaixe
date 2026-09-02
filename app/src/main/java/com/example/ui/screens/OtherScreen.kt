@@ -31,7 +31,6 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OtherScreen(viewModel: LedgerViewModel) {
     val context = LocalContext.current
@@ -212,11 +211,11 @@ fun OtherScreen(viewModel: LedgerViewModel) {
     }
     
     if (showManageSources) {
-        ManageSourcesDialog(viewModel = viewModel, onDismiss = { showManageSources = false })
+        ManageSourcesSheet(viewModel = viewModel, onDismiss = { showManageSources = false })
     }
     
     if (showManageCategories) {
-        ManageCategoriesDialog(viewModel = viewModel, onDismiss = { showManageCategories = false })
+        ManageCategoriesSheet(viewModel = viewModel, onDismiss = { showManageCategories = false })
     }
 }
 
@@ -251,50 +250,4 @@ fun SettingsMenuItem(title: String, subtitle: String, icon: ImageVector, onClick
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ManageSourcesDialog(viewModel: LedgerViewModel, onDismiss: () -> Unit) {
-    val sources by viewModel.activeRevenueSources.collectAsState()
-    
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Quản lý nguồn thu") },
-        text = {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                sources.forEach { source ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(source.name, modifier = Modifier.weight(1f))
-                    }
-                }
-            }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("ĐÓNG") } }
-    )
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ManageCategoriesDialog(viewModel: LedgerViewModel, onDismiss: () -> Unit) {
-    val categories by viewModel.activeExpenseCategories.collectAsState()
-    
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Danh mục chi phí") },
-        text = {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                categories.forEach { cat ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(cat.name, modifier = Modifier.weight(1f))
-                    }
-                }
-            }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("ĐÓNG") } }
-    )
-}
