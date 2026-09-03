@@ -90,7 +90,18 @@ fun MainScreen(viewModel: LedgerViewModel) {
                 HistoryScreen(viewModel = viewModel)
             }
             composable(Screen.Report.route) {
-                com.example.ui.screens.ReportScreen(viewModel = viewModel)
+                com.example.ui.screens.ReportScreen(
+                    viewModel = viewModel,
+                    onNavigateToHistory = {
+                        navController.navigate(Screen.History.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
             }
             composable(Screen.Other.route) {
                 com.example.ui.screens.OtherScreen(viewModel = viewModel)

@@ -77,25 +77,25 @@ fun EditRevenueSheet(
                 singleLine = true
             )
             Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = tripsStr,
-                onValueChange = { tripsStr = it },
-                label = { Text("Số cuốc") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            OutlinedTextField(
-                value = distanceStr,
-                onValueChange = { distanceStr = it.replace(",", ".") },
-                label = { Text("Số km (Không bắt buộc)") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                OutlinedTextField(
+                    value = tripsStr,
+                    onValueChange = { tripsStr = it },
+                    label = { Text("Số cuốc") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f),
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = distanceStr,
+                    onValueChange = { distanceStr = it.replace(",", ".") },
+                    label = { Text("Số KM") },
+                    placeholder = { Text("Không bắt buộc") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f),
+                    singleLine = true
+                )
+            }
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = note,
@@ -134,6 +134,7 @@ fun EditRevenueSheet(
                                 sourceId = selectedSourceId,
                                 amount = amount,
                                 trips = trips,
+                                distanceKm = distanceStr.replace(",", ".").toFloatOrNull(),
                                 note = note
                             ))
                         }

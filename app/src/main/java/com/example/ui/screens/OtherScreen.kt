@@ -47,6 +47,7 @@ fun OtherScreen(viewModel: LedgerViewModel) {
     
     var showResetConfirmDialog by remember { mutableStateOf(false) }
     var showResetConfirmDialog2 by remember { mutableStateOf(false) }
+    var showAppInfoSheet by remember { mutableStateOf(false) }
     
     val backupLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
@@ -162,6 +163,22 @@ fun OtherScreen(viewModel: LedgerViewModel) {
             }
         }
         
+        Text("THÔNG TIN", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp, start = 8.dp))
+        Card(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column {
+                SettingsMenuItem(
+                    title = "Thông tin phần mềm",
+                    subtitle = "Phiên bản, nhà phát triển",
+                    icon = Icons.Default.Info,
+                    onClick = { showAppInfoSheet = true }
+                )
+            }
+        }
+
         Text("HỆ THỐNG", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp, start = 8.dp))
         Card(
             modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
@@ -187,9 +204,9 @@ fun OtherScreen(viewModel: LedgerViewModel) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("🚗 Made for drivers • ", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("LHN", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                Text("  ·  v$APP_VERSION", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("BA BON • ", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Version 1.0", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                Text("", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -248,6 +265,10 @@ fun OtherScreen(viewModel: LedgerViewModel) {
     if (showManageCategories) {
         ManageCategoriesSheet(viewModel = viewModel, onDismiss = { showManageCategories = false })
     }
+    
+    if (showAppInfoSheet) {
+        AppInfoSheet(onDismiss = { showAppInfoSheet = false })
+    }
 }
 
 @Composable
@@ -278,5 +299,38 @@ fun SettingsMenuItem(title: String, subtitle: String, icon: ImageVector, onClick
             Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AppInfoSheet(onDismiss: () -> Unit) {
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = Icons.Default.Info,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Sổ Tài Xế", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Version 1.0", style = MaterialTheme.typography.bodyLarge)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Phát triển bởi BA BON", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(modifier = Modifier.height(32.dp))
+            Text("© 2026 BA BON", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
+                Text("ĐÓNG")
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+        }
     }
 }

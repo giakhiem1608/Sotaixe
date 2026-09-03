@@ -34,7 +34,34 @@ fun HistoryScreen(viewModel: LedgerViewModel) {
     var editingRevenue by remember { mutableStateOf<RevenueEntry?>(null) }
     var editingExpense by remember { mutableStateOf<ExpenseEntry?>(null) }
 
-    val allDates = (revenueEntries.map { it.dateString } + expenseEntries.map { it.dateString }).distinct().sortedDescending()
+    val missingKmCount = revenueEntries.count { it.distanceKm == null || it.distanceKm <= 0f }
+    val activeMissingKmFilter = viewModel.activeMissingKmFilter.collectAsState().value
+    
+    var selectedFilter by remember { mutableStateOf<String>("Tất cả") }
+    
+    LaunchedEffect(activeMissingKmFilter) {
+        if (activeMissingKmFilter) {
+            selectedFilter = "Thiếu KM"
+            viewModel.clearMissingKmFilter()
+        }
+    }
+
+    val filteredRevenues = remember(revenueEntries, selectedFilter, sources) {
+        if (selectedFilter == "Tất cả") {
+            revenueEntries
+        } else if (selectedFilter == "Thiếu KM") {
+            revenueEntries.filter { it.distanceKm == null || it.distanceKm <= 0f }
+        } else {
+            val sourceId = sources.find { it.name == selectedFilter }?.id
+            if (sourceId != null) revenueEntries.filter { it.sourceId == sourceId } else revenueEntries
+        }
+    }
+    
+    val filteredExpenses = remember(expenseEntries, selectedFilter) {
+        if (selectedFilter == "Tất cả") expenseEntries else emptyList()
+    }
+    
+    val allDates = (filteredRevenues.map { it.dateString } + filteredExpenses.map { it.dateString }).distinct().sortedDescending()
 
     Column(
         modifier = Modifier
@@ -65,8 +92,8 @@ fun HistoryScreen(viewModel: LedgerViewModel) {
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
                 items(allDates) { dateStr ->
-                    val dayRevenues = revenueEntries.filter { it.dateString == dateStr }
-                    val dayExpenses = expenseEntries.filter { it.dateString == dateStr }
+                    val dayRevenues = filteredRevenues.filter { it.dateString == dateStr }
+                    val dayExpenses = filteredExpenses.filter { it.dateString == dateStr }
                     
                     DayHistoryCard(
                         dateString = dateStr,

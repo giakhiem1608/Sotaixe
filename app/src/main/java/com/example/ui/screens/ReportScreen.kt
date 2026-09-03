@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.*
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.runtime.*
@@ -25,7 +26,7 @@ import com.example.ui.viewmodels.LedgerViewModel
 import com.example.utils.FormatUtils
 
 @Composable
-fun ReportScreen(viewModel: LedgerViewModel) {
+fun ReportScreen(viewModel: LedgerViewModel, onNavigateToHistory: () -> Unit = {}) {
     val currentMonthStr by viewModel.currentMonth.collectAsState()
     val revenueEntries by viewModel.historyRevenueEntries.collectAsState()
     val expenseEntries by viewModel.historyExpenseEntries.collectAsState()
@@ -91,6 +92,36 @@ fun ReportScreen(viewModel: LedgerViewModel) {
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+
+                val missingKmEntries = revenueEntries.filter { it.distanceKm == null || it.distanceKm <= 0f }
+                val missingKmTrips = missingKmEntries.sumOf { it.trips }
+                if (missingKmTrips > 0) {
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.8f))
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.WarningAmber, contentDescription = "Cảnh báo", tint = MaterialTheme.colorScheme.error)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Thiếu dữ liệu quãng đường", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onErrorContainer)
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("$missingKmTrips/$totalTrips cuốc chưa có KM.\nCác chỉ số liên quan KM có thể chưa chính xác.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onErrorContainer)
+                                Spacer(modifier = Modifier.height(12.dp))
+                                TextButton(
+                                    onClick = { viewModel.activateMissingKmFilter(); onNavigateToHistory() },
+                                    contentPadding = PaddingValues(0.dp),
+                                    modifier = Modifier.height(32.dp)
+                                ) {
+                                    Text("XEM CÁC CUỐC THIẾU KM", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
+                                }
+                            }
+                        }
+                    }
+                }
+                
                 // Goals Card
                 item {
                     val goal by viewModel.currentMonthGoal.collectAsState()

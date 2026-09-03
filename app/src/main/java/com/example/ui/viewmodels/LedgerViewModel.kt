@@ -11,6 +11,18 @@ import java.util.Calendar
 import java.util.Date
 
 class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
+    
+    private val _activeMissingKmFilter = MutableStateFlow(false)
+    val activeMissingKmFilter: StateFlow<Boolean> = _activeMissingKmFilter.asStateFlow()
+    
+    fun activateMissingKmFilter() {
+        _activeMissingKmFilter.value = true
+    }
+    
+    fun clearMissingKmFilter() {
+        _activeMissingKmFilter.value = false
+    }
+
     val themeManager = ThemeManager(repository.sharedPreferences)
     val cardBgColor = themeManager.cardBgColor
     val incomeColor = themeManager.incomeColor
