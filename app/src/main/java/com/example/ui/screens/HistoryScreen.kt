@@ -51,6 +51,8 @@ fun HistoryScreen(viewModel: LedgerViewModel) {
             revenueEntries
         } else if (selectedFilter == "Thiếu KM") {
             revenueEntries.filter { it.distanceKm == null || it.distanceKm <= 0f }
+        } else if (selectedFilter == "Có Tip") {
+            revenueEntries.filter { (it.tipAmount ?: 0L) > 0L }
         } else {
             val sourceId = sources.find { it.name == selectedFilter }?.id
             if (sourceId != null) revenueEntries.filter { it.sourceId == sourceId } else revenueEntries
@@ -155,8 +157,9 @@ fun DayHistoryCard(
     var expanded by remember { mutableStateOf(false) }
 
     val totalRev = revenues.sumOf { it.amount }
+    val totalTip = revenues.sumOf { it.tipAmount ?: 0L }
     val totalExp = expenses.sumOf { it.amount }
-    val netIncome = totalRev - totalExp
+    val netIncome = totalRev + totalTip - totalExp
     val totalTrips = revenues.sumOf { it.trips }
     
     val dateTimestamp = FormatUtils.parseDbDate(dateString)

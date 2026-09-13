@@ -38,17 +38,20 @@ fun ReportScreen(viewModel: LedgerViewModel, onNavigateToHistory: () -> Unit = {
     }
     
     val totalRev = revenueEntries.sumOf { it.amount }
+    val totalTip = revenueEntries.sumOf { it.tipAmount ?: 0L }
     val totalExp = expenseEntries.sumOf { it.amount }
-    val netIncome = totalRev - totalExp
+    val netIncome = totalRev + totalTip - totalExp
     val cardBgColorHex by viewModel.cardBgColor.collectAsState()
     val incomeColorHex by viewModel.incomeColor.collectAsState()
     val revenueColorHex by viewModel.revenueColor.collectAsState()
     val expenseColorHex by viewModel.expenseColor.collectAsState()
+    val tipColorHex by viewModel.tipColor.collectAsState()
     val cardBgColor = try { Color(android.graphics.Color.parseColor(cardBgColorHex)) } catch (e: Exception) { MaterialTheme.colorScheme.primaryContainer }
     val onCardBgColor = if (cardBgColor.luminance() > 0.5f) Color.Black else Color.White
     val incomeColor = if (incomeColorHex.isNotEmpty()) try { Color(android.graphics.Color.parseColor(incomeColorHex)) } catch (e: Exception) { onCardBgColor } else onCardBgColor
     val revenueColor = if (revenueColorHex.isNotEmpty()) try { Color(android.graphics.Color.parseColor(revenueColorHex)) } catch (e: Exception) { onCardBgColor } else onCardBgColor
     val expColor = if (expenseColorHex.isNotEmpty()) try { Color(android.graphics.Color.parseColor(expenseColorHex)) } catch (e: Exception) { ExpenseError } else ExpenseError
+    val tipColor = if (tipColorHex.isNotEmpty()) try { Color(android.graphics.Color.parseColor(tipColorHex)) } catch (e: Exception) { Color(0xFFF59E0B) } else Color(0xFFF59E0B)
     val totalTrips = revenueEntries.sumOf { it.trips }
     val daysWorked = revenueEntries.map { it.dateString }.distinct().size
     
@@ -204,7 +207,14 @@ fun ReportScreen(viewModel: LedgerViewModel, onNavigateToHistory: () -> Unit = {
                                 }
                                 Column(horizontalAlignment = Alignment.End) {
                                     Text("Chi phí", style = MaterialTheme.typography.bodySmall, color = onCardBgColor.copy(alpha = 0.8f))
-                                    Text(FormatUtils.formatCurrency(totalExp), fontWeight = FontWeight.Bold, color = if (totalExp > 0) expColor else onCardBgColor.copy(alpha = 0.8f))
+                                    Text(if (totalExp > 0) "- ${FormatUtils.formatCurrency(totalExp)}" else "0 đ", fontWeight = FontWeight.Bold, color = if (totalExp > 0) expColor else onCardBgColor.copy(alpha = 0.8f))
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+                                Column(horizontalAlignment = Alignment.Start) {
+                                    Text("Tip", style = MaterialTheme.typography.bodySmall, color = onCardBgColor.copy(alpha = 0.8f))
+                                    Text(if (totalTip > 0) "+ ${FormatUtils.formatCurrency(totalTip)}" else "0 đ", fontWeight = FontWeight.Bold, color = if (totalTip > 0) tipColor else onCardBgColor.copy(alpha = 0.8f))
                                 }
                             }
                         }
@@ -233,6 +243,17 @@ fun ReportScreen(viewModel: LedgerViewModel, onNavigateToHistory: () -> Unit = {
                             }
                             if (totalHours > 0) {
                                 StatRow("Tổng giờ chạy", "${String.format("%.1f", totalHours).replace(".", ",")} giờ")
+                            }
+
+                            if (totalTip > 0) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text("TIỀN TIP", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                StatRow("Tổng Tip", FormatUtils.formatCurrency(totalTip))
+                                val tipTransactions = revenueEntries.count { (it.tipAmount ?: 0L) > 0L }
+                                StatRow("Giao dịch có Tip", "$tipTransactions")
+                                val avgTip = if (tipTransactions > 0) totalTip / tipTransactions else 0L
+                                StatRow("TB Tip/giao dịch có Tip", FormatUtils.formatCurrency(avgTip))
                             }
                             
                             Spacer(modifier = Modifier.height(16.dp))

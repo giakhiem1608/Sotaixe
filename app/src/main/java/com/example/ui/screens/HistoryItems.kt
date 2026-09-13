@@ -32,7 +32,11 @@ fun RevenueEntryItem(entry: RevenueEntry, sources: List<RevenueSource>, onEdit: 
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(source?.name ?: "Nguồn khác", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-                Text("${entry.trips} cuốc • ${FormatUtils.formatTime(entry.timestamp)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                var subtext = "${entry.trips} cuốc"
+                if (entry.distanceKm != null) subtext += " • ${String.format("%.1f", entry.distanceKm).replace(".0", "").replace(".", ",")} km"
+                if ((entry.tipAmount ?: 0L) > 0L) subtext += " • Tip +${FormatUtils.formatCurrency(entry.tipAmount ?: 0L)}"
+                subtext += " • ${FormatUtils.formatTime(entry.timestamp)}"
+                Text(subtext, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Text(FormatUtils.formatCurrency(entry.amount), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         }

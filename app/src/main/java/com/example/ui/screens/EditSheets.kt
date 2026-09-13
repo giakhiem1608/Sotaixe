@@ -40,6 +40,8 @@ fun EditRevenueSheet(
         var selectedSourceId by remember { mutableStateOf(entry.sourceId) }
         var amountStr by remember { mutableStateOf(entry.amount.toString()) }
         var tripsStr by remember { mutableStateOf(entry.trips.toString()) }
+        var tipStr by remember { mutableStateOf((entry.tipAmount ?: 0L).toString()) }
+        if (tipStr == "0") tipStr = ""
         var distanceStr by remember { mutableStateOf(entry.distanceKm?.toString() ?: "") }
         var note by remember { mutableStateOf(entry.note) }
         
@@ -70,7 +72,19 @@ fun EditRevenueSheet(
                 onValueChange = { newValue ->
                     if (newValue.all { it.isDigit() }) amountStr = newValue
                 },
-                label = { Text("Số tiền thực nhận (đ)") },
+                label = { Text("Số tiền cuốc (đ)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                visualTransformation = CurrencyVisualTransformation(),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = tipStr,
+                onValueChange = { newValue ->
+                    if (newValue.all { it.isDigit() }) tipStr = newValue
+                },
+                label = { Text("Tiền tip (Tùy chọn)") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 visualTransformation = CurrencyVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),

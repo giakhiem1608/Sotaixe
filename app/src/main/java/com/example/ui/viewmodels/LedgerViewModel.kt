@@ -28,9 +28,10 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
     val incomeColor = themeManager.incomeColor
     val revenueColor = themeManager.revenueColor
     val expenseColor = themeManager.expenseColor
+    val tipColor = themeManager.tipColor
 
-    fun updateCardColors(bgHex: String, incomeHex: String, revHex: String, expHex: String) {
-        themeManager.setCardColors(bgHex, incomeHex, revHex, expHex)
+    fun updateCardColors(bgHex: String, incomeHex: String, revHex: String, expHex: String, tipHex: String = "") {
+        themeManager.setCardColors(bgHex, incomeHex, revHex, expHex, tipHex)
     }
     
     // Current selected date for Today screen (default to today)
@@ -63,33 +64,23 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Aggregated stats for today
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val todaysTotalRevenue: StateFlow<Long> = currentDateString.flatMapLatest { dateStr ->
-        repository.getTotalRevenueByDate(dateStr).map { it ?: 0L }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0L)
-
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val todaysTotalExpense: StateFlow<Long> = currentDateString.flatMapLatest { dateStr ->
-        repository.getTotalExpenseByDate(dateStr).map { it ?: 0L }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0L)
-
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val todaysTotalTrips: StateFlow<Int> = currentDateString.flatMapLatest { dateStr ->
-        repository.getTotalTripsByDate(dateStr).map { it ?: 0 }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+    val todaysTotalRevenue: StateFlow<Long> = todaysRevenueEntries.map { list -> list.sumOf { it.amount } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0L)
     
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val todaysTotalDuration: StateFlow<Float> = currentDateString.flatMapLatest { dateStr ->
-        repository.getTotalDurationByDate(dateStr).map { it ?: 0f }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0f)
+    val todaysTotalTip: StateFlow<Long> = todaysRevenueEntries.map { list -> list.sumOf { it.tipAmount ?: 0L } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0L)
 
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val todaysTotalDistance: StateFlow<Float> = currentDateString.flatMapLatest { dateStr ->
-        repository.getTotalDistanceByDate(dateStr).map { it ?: 0f }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0f)
+    val todaysTotalExpense: StateFlow<Long> = todaysExpenseEntries.map { list -> list.sumOf { it.amount } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0L)
 
-    val todaysNetIncome: StateFlow<Long> = combine(todaysTotalRevenue, todaysTotalExpense) { rev, exp ->
-        rev - exp
+    val todaysTotalTrips: StateFlow<Int> = todaysRevenueEntries.map { list -> list.sumOf { it.trips } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+    
+    val todaysTotalDistance: StateFlow<Float> = todaysRevenueEntries.map { list -> list.sumOf { (it.distanceKm ?: 0f).toDouble() }.toFloat() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0f)
+
+    val todaysNetIncome: StateFlow<Long> = combine(todaysTotalRevenue, todaysTotalTip, todaysTotalExpense) { rev, tip, exp ->
+        rev + tip - exp
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0L)
 
     // Current Month data for Report/Goals
@@ -362,19 +353,24 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
                 
                 val totalRev = revEntries.sumOf { it.amount }
                 val totalExp = expEntries.sumOf { it.amount }
+                val totalTip = revEntries.sumOf { it.tipAmount ?: 0L }
                 val totalTrips = revEntries.sumOf { it.trips }
                 
                 wsOverview.value(2, 0, "Tong doanh thu")
                 wsOverview.value(2, 1, totalRev)
-                wsOverview.value(3, 0, "Tong chi phi")
-                wsOverview.value(3, 1, totalExp)
-                wsOverview.value(4, 0, "Thu nhap rong")
-                wsOverview.value(4, 1, totalRev - totalExp)
-                wsOverview.value(5, 0, "Tong so cuoc")
-                wsOverview.value(5, 1, totalTrips)
+                wsOverview.value(3, 0, "Tong Tip")
+                wsOverview.value(3, 1, totalTip)
+                wsOverview.value(4, 0, "Tong tien nhan")
+                wsOverview.value(4, 1, totalRev + totalTip)
+                wsOverview.value(5, 0, "Tong chi phi")
+                wsOverview.value(5, 1, totalExp)
+                wsOverview.value(6, 0, "Thu nhap rong")
+                wsOverview.value(6, 1, totalRev + totalTip - totalExp)
+                wsOverview.value(7, 0, "Tong so cuoc")
+                wsOverview.value(7, 1, totalTrips)
 
                 val wsRev = wb.newWorksheet("Doanh thu")
-                val revHeaders = listOf("Ngay", "Nguon", "So tien", "So cuoc", "Km", "Gio chay", "Ghi chu")
+                val revHeaders = listOf("Ngay", "Nguon", "So tien", "Tien Tip", "So cuoc", "Km", "Gio chay", "Ghi chu")
                 revHeaders.forEachIndexed { i, header -> 
                     wsRev.value(0, i, header)
                     wsRev.style(0, i).bold().set()
@@ -387,10 +383,11 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
                     wsRev.value(r, 0, date)
                     wsRev.value(r, 1, sourceName)
                     wsRev.value(r, 2, rev.amount)
-                    wsRev.value(r, 3, rev.trips)
-                    if (rev.distanceKm != null) wsRev.value(r, 4, rev.distanceKm)
-                    if (rev.durationHrs != null) wsRev.value(r, 5, rev.durationHrs)
-                    wsRev.value(r, 6, rev.note)
+                    wsRev.value(r, 3, rev.tipAmount ?: 0L)
+                    wsRev.value(r, 4, rev.trips)
+                    if (rev.distanceKm != null) wsRev.value(r, 5, rev.distanceKm)
+                    if (rev.durationHrs != null) wsRev.value(r, 6, rev.durationHrs)
+                    wsRev.value(r, 7, rev.note)
                 }
 
                 val wsExp = wb.newWorksheet("Chi phi")
@@ -427,9 +424,10 @@ class LedgerViewModelFactory(private val repository: LedgerRepository) : ViewMod
     val incomeColor = themeManager.incomeColor
     val revenueColor = themeManager.revenueColor
     val expenseColor = themeManager.expenseColor
+    val tipColor = themeManager.tipColor
 
-    fun updateCardColors(bgHex: String, incomeHex: String, revHex: String, expHex: String) {
-        themeManager.setCardColors(bgHex, incomeHex, revHex, expHex)
+    fun updateCardColors(bgHex: String, incomeHex: String, revHex: String, expHex: String, tipHex: String = "") {
+        themeManager.setCardColors(bgHex, incomeHex, revHex, expHex, tipHex)
     }
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(LedgerViewModel::class.java)) {

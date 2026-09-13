@@ -259,7 +259,7 @@ fun OtherScreen(viewModel: LedgerViewModel) {
     }
     
     if (showThemeSettings) {
-        ThemeSettingsSheet(viewModel = viewModel, onDismiss = { showThemeSettings = false })
+        ThemeSettingsSheet(themeManager = viewModel.themeManager, onDismiss = { showThemeSettings = false })
     }
     
     if (showManageCategories) {

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -11,7 +12,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [RevenueSource::class, ExpenseCategory::class, RevenueEntry::class, ExpenseEntry::class, Goal::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class LedgerDatabase : RoomDatabase() {
@@ -21,6 +22,13 @@ abstract class LedgerDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: LedgerDatabase? = null
 
+        
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE revenue_entries ADD COLUMN tipAmount INTEGER DEFAULT 0")
+            }
+        }
+        
         fun getDatabase(context: Context): LedgerDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -28,6 +36,7 @@ abstract class LedgerDatabase : RoomDatabase() {
                     LedgerDatabase::class.java,
                     "ledger_database"
                 )
+                .addMigrations(MIGRATION_1_2)
                 .addCallback(LedgerDatabaseCallback())
                 .build()
                 INSTANCE = instance

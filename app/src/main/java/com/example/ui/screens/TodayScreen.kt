@@ -47,6 +47,8 @@ fun TodayScreen(viewModel: LedgerViewModel) {
     val incomeColorHex by viewModel.incomeColor.collectAsState()
     val revenueColorHex by viewModel.revenueColor.collectAsState()
     val expenseColorHex by viewModel.expenseColor.collectAsState()
+    val tipColorHex by viewModel.tipColor.collectAsState()
+    val totalTip by viewModel.todaysTotalTip.collectAsState()
     
     val cardBgColor = try { Color(android.graphics.Color.parseColor(cardBgColorHex)) } catch (e: Exception) { MaterialTheme.colorScheme.primaryContainer }
     val onCardBgColor = if (cardBgColor.luminance() > 0.5f) Color.Black else Color.White
@@ -54,6 +56,7 @@ fun TodayScreen(viewModel: LedgerViewModel) {
     val incomeColor = if (incomeColorHex.isNotEmpty()) try { Color(android.graphics.Color.parseColor(incomeColorHex)) } catch (e: Exception) { onCardBgColor } else onCardBgColor
     val revenueColor = if (revenueColorHex.isNotEmpty()) try { Color(android.graphics.Color.parseColor(revenueColorHex)) } catch (e: Exception) { onCardBgColor } else onCardBgColor
     val expColor = if (expenseColorHex.isNotEmpty()) try { Color(android.graphics.Color.parseColor(expenseColorHex)) } catch (e: Exception) { ExpenseError } else ExpenseError
+    val tipColor = if (tipColorHex.isNotEmpty()) try { Color(android.graphics.Color.parseColor(tipColorHex)) } catch (e: Exception) { Color(0xFFF59E0B) } else Color(0xFFF59E0B)
 
     
     
@@ -169,17 +172,17 @@ fun TodayScreen(viewModel: LedgerViewModel) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Button(
+            OutlinedButton(
                 onClick = { showAddExpenseSheet = true },
                 modifier = Modifier
                     .weight(1f)
-                    .height(52.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.primary
-                ),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp),
-                shape = RoundedCornerShape(12.dp)
+                    .height(52.dp)
+                    .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp)),
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                )
             ) {
                 Text("+ Chi phí", fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
             }
@@ -192,7 +195,7 @@ fun TodayScreen(viewModel: LedgerViewModel) {
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text("+ Doanh thu", fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
@@ -285,6 +288,7 @@ fun AddRevenueSheet(
         var selectedSourceId by remember { mutableStateOf(sources.firstOrNull()?.id ?: 0) }
         var amountStr by remember { mutableStateOf("") }
         var tripsStr by remember { mutableStateOf("1") }
+        var tipStr by remember { mutableStateOf("") }
         var distanceStr by remember { mutableStateOf("") }
         var note by remember { mutableStateOf("") }
         
@@ -320,13 +324,24 @@ fun AddRevenueSheet(
                 onValueChange = { newValue ->
                     if (newValue.all { it.isDigit() }) amountStr = newValue
                 },
-                label = { Text("Số tiền thực nhận (đ)") },
+                label = { Text("Số tiền cuốc (đ)") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 visualTransformation = com.example.utils.CurrencyVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
-            
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = tipStr,
+                onValueChange = { newValue ->
+                    if (newValue.all { it.isDigit() }) tipStr = newValue
+                },
+                label = { Text("Tiền tip (Tùy chọn)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                visualTransformation = com.example.utils.CurrencyVisualTransformation(),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
             Spacer(modifier = Modifier.height(8.dp))
             
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {

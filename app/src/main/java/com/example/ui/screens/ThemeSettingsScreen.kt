@@ -1,18 +1,12 @@
 package com.example.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,53 +17,30 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.viewmodels.LedgerViewModel
-
-data class ThemePreset(
-    val name: String,
-    val bgHex: String,
-    val incomeHex: String,
-    val revHex: String,
-    val expHex: String
-)
-
-val PRESETS = listOf(
-    ThemePreset("Mặc định", "#16A34A", "", "", ""),
-    ThemePreset("Emerald", "#10B981", "#FFFFFF", "#FFFFFF", "#FCA5A5"),
-    ThemePreset("Deep Navy", "#1E3A8A", "#60A5FA", "#FFFFFF", "#F87171"),
-    ThemePreset("Teal", "#0F766E", "#CCFBF1", "#FFFFFF", "#FDA4AF"),
-    ThemePreset("Graphite", "#374151", "#E5E7EB", "#FFFFFF", "#FCA5A5"),
-    ThemePreset("Indigo", "#4338CA", "#C7D2FE", "#FFFFFF", "#FCA5A5"),
-    ThemePreset("Dark Mint", "#064E3B", "#34D399", "#FFFFFF", "#F87171")
-)
-
-val COLOR_PALETTE = listOf(
-    "#16A34A", "#10B981", "#0F766E", "#064E3B", // Greens/Teals
-    "#1E3A8A", "#4338CA", "#3B82F6", "#60A5FA", // Blues/Navy
-    "#7C3AED", "#D946EF", "#EC4899", "#F43F5E", // Purples/Pinks
-    "#EF4444", "#F97316", "#F59E0B", "#EAB308", // Reds/Oranges/Yellows
-    "#FFFFFF", "#F3F4F6", "#9CA3AF", "#374151", // Grays/White
-    "#000000", "#18181B", "#FCA5A5", "#F87171"  // Dark/Error colors
-)
+import com.example.ui.viewmodels.ThemeManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ThemeSettingsSheet(viewModel: LedgerViewModel, onDismiss: () -> Unit) {
+fun ThemeSettingsSheet(
+    themeManager: ThemeManager,
+    onDismiss: () -> Unit
+) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     
-    val currentBgHex by viewModel.cardBgColor.collectAsState()
-    val currentIncomeHex by viewModel.incomeColor.collectAsState()
-    val currentRevHex by viewModel.revenueColor.collectAsState()
-    val currentExpHex by viewModel.expenseColor.collectAsState()
-    
+    val currentBgHex by themeManager.cardBgColor.collectAsState()
+    val currentIncomeHex by themeManager.incomeColor.collectAsState()
+    val currentRevHex by themeManager.revenueColor.collectAsState()
+    val currentExpHex by themeManager.expenseColor.collectAsState()
+    val currentTipHex by themeManager.tipColor.collectAsState()
+
     var tempBgHex by remember { mutableStateOf(currentBgHex) }
     var tempIncomeHex by remember { mutableStateOf(currentIncomeHex) }
     var tempRevHex by remember { mutableStateOf(currentRevHex) }
     var tempExpHex by remember { mutableStateOf(currentExpHex) }
-    
+    var tempTipHex by remember { mutableStateOf(currentTipHex) }
+
     var isCustomMode by remember { mutableStateOf(false) }
-    
-    // State for Color Picker Dialog
+
     var showColorPicker by remember { mutableStateOf(false) }
     var colorPickerTarget by remember { mutableStateOf("") }
     var colorPickerCurrentHex by remember { mutableStateOf("") }
@@ -93,15 +64,27 @@ fun ThemeSettingsSheet(viewModel: LedgerViewModel, onDismiss: () -> Unit) {
                 bgHex = tempBgHex,
                 incomeHex = tempIncomeHex,
                 revHex = tempRevHex,
-                expHex = tempExpHex
+                expHex = tempExpHex,
+                tipHex = tempTipHex
             )
             
             Spacer(modifier = Modifier.height(24.dp))
             
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text("Mẫu có sẵn", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                TextButton(onClick = { isCustomMode = !isCustomMode }) {
-                    Text(if (isCustomMode) "Chọn mẫu >" else "Tùy chỉnh >")
+                Row {
+                    TextButton(onClick = { 
+                        tempBgHex = "#111827"
+                        tempIncomeHex = "#FFFFFF"
+                        tempRevHex = "#22C55E"
+                        tempExpHex = "#F05D5E"
+                        tempTipHex = "#F59E0B"
+                    }) {
+                        Text("Reset", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    TextButton(onClick = { isCustomMode = !isCustomMode }) {
+                        Text(if (isCustomMode) "Chọn mẫu >" else "Tùy chỉnh >")
+                    }
                 }
             }
             
@@ -129,68 +112,39 @@ fun ThemeSettingsSheet(viewModel: LedgerViewModel, onDismiss: () -> Unit) {
                     colorPickerCurrentHex = tempExpHex
                     showColorPicker = true 
                 }
+                ColorSelectRow("Tip", tempTipHex, allowAuto = true) { 
+                    colorPickerTarget = "tip"
+                    colorPickerCurrentHex = tempTipHex
+                    showColorPicker = true 
+                }
             } else {
-                // Preset Grid
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(3),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.heightIn(max = 300.dp)
-                ) {
-                    items(PRESETS) { preset ->
-                        val isSelected = tempBgHex == preset.bgHex && tempIncomeHex == preset.incomeHex && tempRevHex == preset.revHex && tempExpHex == preset.expHex
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { 
-                                    tempBgHex = preset.bgHex
-                                    tempIncomeHex = preset.incomeHex
-                                    tempRevHex = preset.revHex
-                                    tempExpHex = preset.expHex
-                                },
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
-                            ),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Column(modifier = Modifier.padding(12.dp).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .clip(CircleShape)
-                                        .background(try { Color(android.graphics.Color.parseColor(preset.bgHex)) } catch (e: Exception) { Color.Gray })
-                                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
-                                ) {
-                                    if (isSelected) {
-                                        Icon(Icons.Default.Check, contentDescription = null, tint = if (Color(android.graphics.Color.parseColor(preset.bgHex)).luminance() > 0.5f) Color.Black else Color.White, modifier = Modifier.align(Alignment.Center))
-                                    }
-                                }
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(preset.name, style = MaterialTheme.typography.bodySmall, maxLines = 1, softWrap = false)
-                            }
-                        }
+                Spacer(modifier = Modifier.height(16.dp))
+                // Theme Presets
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                    ThemePresetBox("Midnight Finance", "#111827", "#FFFFFF", "#22C55E", "#F05D5E", "#F59E0B") { bg, inc, rev, exp, tip ->
+                        tempBgHex = bg; tempIncomeHex = inc; tempRevHex = rev; tempExpHex = exp; tempTipHex = tip
+                    }
+                    ThemePresetBox("Classic Green", "#16A34A", "#FFFFFF", "#FFFFFF", "#FFCDD2", "#FFE082") { bg, inc, rev, exp, tip ->
+                        tempBgHex = bg; tempIncomeHex = inc; tempRevHex = rev; tempExpHex = exp; tempTipHex = tip
+                    }
+                    ThemePresetBox("Royal Purple", "#4C1D95", "#FFFFFF", "#A78BFA", "#F87171", "#FDE047") { bg, inc, rev, exp, tip ->
+                        tempBgHex = bg; tempIncomeHex = inc; tempRevHex = rev; tempExpHex = exp; tempTipHex = tip
+                    }
+                    ThemePresetBox("Ocean Blue", "#0369A1", "#FFFFFF", "#7DD3FC", "#FDA4AF", "#FEF08A") { bg, inc, rev, exp, tip ->
+                        tempBgHex = bg; tempIncomeHex = inc; tempRevHex = rev; tempExpHex = exp; tempTipHex = tip
                     }
                 }
             }
             
             Spacer(modifier = Modifier.height(24.dp))
-            
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                OutlinedButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.weight(1f).height(56.dp)
-                ) {
-                    Text("HỦY")
-                }
-                Button(
-                    onClick = {
-                        viewModel.updateCardColors(tempBgHex, tempIncomeHex, tempRevHex, tempExpHex)
-                        onDismiss()
-                    },
-                    modifier = Modifier.weight(1f).height(56.dp)
-                ) {
-                    Text("ÁP DỤNG", fontWeight = FontWeight.Bold)
-                }
+            Button(
+                onClick = {
+                    themeManager.setCardColors(tempBgHex, tempIncomeHex, tempRevHex, tempExpHex, tempTipHex)
+                    onDismiss()
+                },
+                modifier = Modifier.fillMaxWidth().height(52.dp)
+            ) {
+                Text("LƯU THAY ĐỔI")
             }
         }
     }
@@ -204,103 +158,121 @@ fun ThemeSettingsSheet(viewModel: LedgerViewModel, onDismiss: () -> Unit) {
                     "income" -> "Chọn màu Thu nhập"
                     "rev" -> "Chọn màu Doanh thu"
                     "exp" -> "Chọn màu Chi phí"
+                    "tip" -> "Chọn màu Tip"
                     else -> "Chọn màu"
                 }
             ) },
             text = {
                 Column {
                     if (colorPickerTarget != "bg") {
-                        Card(
-                            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp).clickable {
+                        TextButton(
+                            onClick = {
+                                val autoHex = ""
                                 when (colorPickerTarget) {
-                                    "income" -> tempIncomeHex = ""
-                                    "rev" -> tempRevHex = ""
-                                    "exp" -> tempExpHex = ""
+                                    "income" -> tempIncomeHex = autoHex
+                                    "rev" -> tempRevHex = autoHex
+                                    "exp" -> tempExpHex = autoHex
+                                    "tip" -> tempTipHex = autoHex
                                 }
                                 showColorPicker = false
                             },
-                            colors = CardDefaults.cardColors(containerColor = if (colorPickerCurrentHex == "") MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant)
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Tự động (Khuyên dùng)", modifier = Modifier.padding(16.dp), fontWeight = FontWeight.Bold, color = if (colorPickerCurrentHex == "") MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Tự động (theo màu chữ của nền)")
                         }
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
-                    
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(4),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.heightIn(max = 280.dp)
+                    val presetColors = listOf(
+                        "#111827", "#16A34A", "#22C55E", "#3B82F6", 
+                        "#8B5CF6", "#F05D5E", "#F59E0B", "#FFFFFF",
+                        "#4C1D95", "#0369A1", "#0F172A", "#64748B"
+                    )
+                    @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+                    androidx.compose.foundation.layout.FlowRow(
+                        modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        items(COLOR_PALETTE) { hex ->
-                            val isSelected = colorPickerCurrentHex == hex
+                        presetColors.forEach { hex ->
+                            val color = try { Color(android.graphics.Color.parseColor(hex)) } catch(e: Exception) { Color.Transparent }
                             Box(
                                 modifier = Modifier
                                     .size(48.dp)
                                     .clip(CircleShape)
-                                    .background(Color(android.graphics.Color.parseColor(hex)))
-                                    .border(if (isSelected) 3.dp else 1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, CircleShape)
+                                    .background(color)
                                     .clickable {
                                         when (colorPickerTarget) {
                                             "bg" -> tempBgHex = hex
                                             "income" -> tempIncomeHex = hex
                                             "rev" -> tempRevHex = hex
                                             "exp" -> tempExpHex = hex
+                                            "tip" -> tempTipHex = hex
                                         }
                                         showColorPicker = false
-                                    },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                if (isSelected) {
-                                    val colorObj = Color(android.graphics.Color.parseColor(hex))
-                                    Icon(Icons.Default.Check, contentDescription = null, tint = if (colorObj.luminance() > 0.5f) Color.Black else Color.White)
-                                }
-                            }
+                                    }
+                            )
                         }
                     }
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showColorPicker = false }) {
-                    Text("ĐÓNG")
-                }
+                TextButton(onClick = { showColorPicker = false }) { Text("ĐÓNG") }
             }
         )
     }
 }
 
 @Composable
-fun ColorSelectRow(label: String, hexValue: String, allowAuto: Boolean = false, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(vertical = 12.dp, horizontal = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(label, style = MaterialTheme.typography.bodyLarge)
-        if (hexValue.isEmpty() && allowAuto) {
-            Text("Tự động", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-        } else {
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(try { Color(android.graphics.Color.parseColor(if (hexValue.isEmpty()) "#888888" else hexValue)) } catch (e: Exception) { Color.Gray })
-                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
-            )
+fun ThemePresetBox(
+    name: String,
+    bgHex: String,
+    incHex: String,
+    revHex: String,
+    expHex: String,
+    tipHex: String,
+    onClick: (String, String, String, String, String) -> Unit
+) {
+    val bgColor = try { Color(android.graphics.Color.parseColor(bgHex)) } catch (e: Exception) { Color.Gray }
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable { onClick(bgHex, incHex, revHex, expHex, tipHex) }.padding(4.dp)) {
+        Box(modifier = Modifier.size(56.dp).clip(CircleShape).background(bgColor), contentAlignment = Alignment.Center) {
+            // inner preview dots
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Box(modifier = Modifier.size(16.dp).height(4.dp).clip(RoundedCornerShape(2.dp)).background(try { Color(android.graphics.Color.parseColor(incHex.ifEmpty { "#FFFFFF" })) } catch (e: Exception) { Color.White }))
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Box(modifier = Modifier.size(12.dp).height(4.dp).clip(RoundedCornerShape(2.dp)).background(try { Color(android.graphics.Color.parseColor(revHex.ifEmpty { "#FFFFFF" })) } catch (e: Exception) { Color.White }))
+                    Box(modifier = Modifier.size(12.dp).height(4.dp).clip(RoundedCornerShape(2.dp)).background(try { Color(android.graphics.Color.parseColor(expHex.ifEmpty { "#FFFFFF" })) } catch (e: Exception) { Color.White }))
+                }
+            }
         }
     }
 }
 
 @Composable
-fun ThemePreviewCard(bgHex: String, incomeHex: String, revHex: String, expHex: String) {
+fun ColorSelectRow(label: String, hexColor: String, allowAuto: Boolean = false, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().clickable { onClick() }.padding(vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyLarge)
+        if (hexColor.isEmpty() && allowAuto) {
+            Text("Tự động", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        } else {
+            val color = try { Color(android.graphics.Color.parseColor(hexColor)) } catch (e: Exception) { Color.Transparent }
+            Box(modifier = Modifier.size(32.dp).clip(CircleShape).background(color))
+        }
+    }
+}
+
+@Composable
+fun ThemePreviewCard(bgHex: String, incomeHex: String, revHex: String, expHex: String, tipHex: String) {
     val bgColor = try { Color(android.graphics.Color.parseColor(bgHex)) } catch (e: Exception) { MaterialTheme.colorScheme.primaryContainer }
     val autoOnColor = if (bgColor.luminance() > 0.5f) Color.Black else Color.White
     
     val incomeColor = if (incomeHex.isNotEmpty()) try { Color(android.graphics.Color.parseColor(incomeHex)) } catch (e: Exception) { autoOnColor } else autoOnColor
     val revColor = if (revHex.isNotEmpty()) try { Color(android.graphics.Color.parseColor(revHex)) } catch (e: Exception) { autoOnColor } else autoOnColor
-    val expColor = if (expHex.isNotEmpty()) try { Color(android.graphics.Color.parseColor(expHex)) } catch (e: Exception) { com.example.ui.theme.ExpenseError } else com.example.ui.theme.ExpenseError
+    val expColor = if (expHex.isNotEmpty()) try { Color(android.graphics.Color.parseColor(expHex)) } catch (e: Exception) { Color(0xFFF05D5E) } else Color(0xFFF05D5E)
+    val tipColor = if (tipHex.isNotEmpty()) try { Color(android.graphics.Color.parseColor(tipHex)) } catch (e: Exception) { Color(0xFFF59E0B) } else Color(0xFFF59E0B)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -310,7 +282,7 @@ fun ThemePreviewCard(bgHex: String, incomeHex: String, revHex: String, expHex: S
         Column(modifier = Modifier.padding(20.dp)) {
             Text("THU NHẬP HÔM NAY", style = MaterialTheme.typography.labelMedium, color = autoOnColor.copy(alpha = 0.8f))
             Text(
-                text = "150.000 ₫",
+                text = "170.000 đ",
                 style = MaterialTheme.typography.displayMedium.copy(fontSize = 32.sp),
                 fontWeight = FontWeight.Bold,
                 color = incomeColor
@@ -319,11 +291,18 @@ fun ThemePreviewCard(bgHex: String, incomeHex: String, revHex: String, expHex: S
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
                     Text("Doanh thu", style = MaterialTheme.typography.labelMedium, color = autoOnColor.copy(alpha = 0.8f))
-                    Text("750.000 ₫", fontWeight = FontWeight.Bold, color = revColor)
+                    Text("750.000 đ", fontWeight = FontWeight.Bold, color = revColor)
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     Text("Chi phí", style = MaterialTheme.typography.labelMedium, color = autoOnColor.copy(alpha = 0.8f))
-                    Text("- 600.000 ₫", fontWeight = FontWeight.Bold, color = expColor)
+                    Text("- 600.000 đ", fontWeight = FontWeight.Bold, color = expColor)
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Column {
+                    Text("Tip", style = MaterialTheme.typography.labelMedium, color = autoOnColor.copy(alpha = 0.8f))
+                    Text("+ 20.000 đ", fontWeight = FontWeight.Bold, color = tipColor)
                 }
             }
         }

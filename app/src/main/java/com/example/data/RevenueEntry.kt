@@ -23,6 +23,7 @@ data class RevenueEntry(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val sourceId: Int,
     val amount: Long,
+    val tipAmount: Long? = 0L,
     val trips: Int,
     val durationHrs: Float? = null,
     val distanceKm: Float? = null,
