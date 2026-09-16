@@ -11,16 +11,16 @@ import java.util.Calendar
 import java.util.Date
 
 class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
-    
-    private val _activeMissingKmFilter = MutableStateFlow(false)
-    val activeMissingKmFilter: StateFlow<Boolean> = _activeMissingKmFilter.asStateFlow()
+
+    private val _missingKmFilterActive = MutableStateFlow(false)
+    val missingKmFilterActive: StateFlow<Boolean> = _missingKmFilterActive.asStateFlow()
     
     fun activateMissingKmFilter() {
-        _activeMissingKmFilter.value = true
+        _missingKmFilterActive.value = true
     }
     
     fun clearMissingKmFilter() {
-        _activeMissingKmFilter.value = false
+        _missingKmFilterActive.value = false
     }
 
     val themeManager = ThemeManager(repository.sharedPreferences)
@@ -140,7 +140,7 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
         _currentMonth.value = monthString
     }
 
-    fun addRevenue(sourceId: Int, amount: Long, trips: Int, duration: Float?, distance: Float?, note: String) {
+    fun addRevenue(sourceId: Int, amount: Long, tipAmount: Long?, trips: Int, duration: Float?, distance: Float?, note: String) {
         viewModelScope.launch {
             val dateStr = FormatUtils.formatDbDate(_currentDate.value)
             repository.insertRevenueEntry(

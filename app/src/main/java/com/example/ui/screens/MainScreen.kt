@@ -84,7 +84,16 @@ fun MainScreen(viewModel: LedgerViewModel) {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Screen.Today.route) {
-                TodayScreen(viewModel = viewModel)
+                TodayScreen(viewModel = viewModel, onNavigateToMissingKm = {
+                    viewModel.activateMissingKmFilter()
+                    navController.navigate(Screen.History.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                })
             }
             composable(Screen.History.route) {
                 HistoryScreen(viewModel = viewModel)
@@ -92,7 +101,8 @@ fun MainScreen(viewModel: LedgerViewModel) {
             composable(Screen.Report.route) {
                 com.example.ui.screens.ReportScreen(
                     viewModel = viewModel,
-                    onNavigateToHistory = {
+                    onNavigateToMissingKm = {
+                        viewModel.activateMissingKmFilter()
                         navController.navigate(Screen.History.route) {
                             popUpTo(navController.graph.findStartDestination().id) {
                                 saveState = true

@@ -1,4 +1,6 @@
-package com.example.ui.screens
+import re
+
+content = """package com.example.ui.screens
 
 import android.net.Uri
 import android.widget.Toast
@@ -300,8 +302,8 @@ fun ExportExcelDialog(onDismiss: () -> Unit, viewModel: LedgerViewModel) {
     var selectedRange by remember { mutableStateOf("Hôm nay") }
     val ranges = listOf("Hôm nay", "7 ngày qua", "Tháng này", "Tháng trước", "Tùy chỉnh")
     
-    var customStartDate by remember { mutableStateOf(FormatUtils.formatDisplayDate(System.currentTimeMillis())) }
-    var customEndDate by remember { mutableStateOf(FormatUtils.formatDisplayDate(System.currentTimeMillis())) }
+    var customStartDate by remember { mutableStateOf(FormatUtils.formatDate(System.currentTimeMillis())) }
+    var customEndDate by remember { mutableStateOf(FormatUtils.formatDate(System.currentTimeMillis())) }
     
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
@@ -355,3 +357,7 @@ fun ExportExcelDialog(onDismiss: () -> Unit, viewModel: LedgerViewModel) {
         }
     )
 }
+"""
+
+with open("app/src/main/java/com/example/ui/screens/OtherScreen.kt", "w") as f:
+    f.write(content)

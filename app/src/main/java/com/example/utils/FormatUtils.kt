@@ -17,36 +17,136 @@ object FormatUtils {
     fun formatTime(timestamp: Long): String {
         val sdf = SimpleDateFormat("HH:mm", Locale("vi", "VN"))
         return sdf.format(Date(timestamp))
+    
+    fun formatDisplayMonth(monthString: String): String {
+        val date = parseDbMonth(monthString) ?: return ""
+        return monthFormat.format(date)
     }
+    
+    fun formatDisplayDate(timestamp: Long): String {
+        return dateFormat.format(Date(timestamp))
+    }
+
+}
     fun formatCurrency(amount: Long): String {
         return currencyFormat.format(amount).replace("₫", "đ").replace(" ", "").replace(",00", "")
+    
+    fun formatDisplayMonth(monthString: String): String {
+        val date = parseDbMonth(monthString) ?: return ""
+        return monthFormat.format(date)
     }
+    
+    fun formatDisplayDate(timestamp: Long): String {
+        return dateFormat.format(Date(timestamp))
+    }
+
+}
 
     fun formatDate(timestamp: Long): String {
         return dateFormat.format(Date(timestamp))
+    
+    fun formatDisplayMonth(monthString: String): String {
+        val date = parseDbMonth(monthString) ?: return ""
+        return monthFormat.format(date)
     }
+    
+    fun formatDisplayDate(timestamp: Long): String {
+        return dateFormat.format(Date(timestamp))
+    }
+
+}
     
     fun formatDbDate(timestamp: Long): String {
         return dbDateFormat.format(Date(timestamp))
+    
+    fun formatDisplayMonth(monthString: String): String {
+        val date = parseDbMonth(monthString) ?: return ""
+        return monthFormat.format(date)
     }
+    
+    fun formatDisplayDate(timestamp: Long): String {
+        return dateFormat.format(Date(timestamp))
+    }
+
+}
     
     fun getDayOfWeek(timestamp: Long): String {
         return dayOfWeekFormat.format(Date(timestamp))
+    
+    fun formatDisplayMonth(monthString: String): String {
+        val date = parseDbMonth(monthString) ?: return ""
+        return monthFormat.format(date)
     }
+    
+    fun formatDisplayDate(timestamp: Long): String {
+        return dateFormat.format(Date(timestamp))
+    }
+
+}
     
     fun parseDbDate(dateString: String): Long {
         return dbDateFormat.parse(dateString)?.time ?: 0L
+    
+    fun formatDisplayMonth(monthString: String): String {
+        val date = parseDbMonth(monthString) ?: return ""
+        return monthFormat.format(date)
     }
+    
+    fun formatDisplayDate(timestamp: Long): String {
+        return dateFormat.format(Date(timestamp))
+    }
+
+}
     
     fun parseDbMonth(monthString: String): java.util.Date? {
         return dbMonthFormat.parse(monthString)
+    
+    fun formatDisplayMonth(monthString: String): String {
+        val date = parseDbMonth(monthString) ?: return ""
+        return monthFormat.format(date)
     }
+    
+    fun formatDisplayDate(timestamp: Long): String {
+        return dateFormat.format(Date(timestamp))
+    }
+
+}
     
     fun formatMonth(timestamp: Long): String {
         return monthFormat.format(Date(timestamp))
+    
+    fun formatDisplayMonth(monthString: String): String {
+        val date = parseDbMonth(monthString) ?: return ""
+        return monthFormat.format(date)
     }
+    
+    fun formatDisplayDate(timestamp: Long): String {
+        return dateFormat.format(Date(timestamp))
+    }
+
+}
     
     fun formatDbMonth(timestamp: Long): String {
         return dbMonthFormat.format(Date(timestamp))
+    
+    fun formatDisplayMonth(monthString: String): String {
+        val date = parseDbMonth(monthString) ?: return ""
+        return monthFormat.format(date)
     }
+    
+    fun formatDisplayDate(timestamp: Long): String {
+        return dateFormat.format(Date(timestamp))
+    }
+
+}
+
+    fun formatDisplayMonth(monthString: String): String {
+        val date = parseDbMonth(monthString) ?: return ""
+        return monthFormat.format(date)
+    }
+    
+    fun formatDisplayDate(timestamp: Long): String {
+        return dateFormat.format(Date(timestamp))
+    }
+
 }
