@@ -1,5 +1,4 @@
-package com.example.ui.screens
-
+content = """package com.example.ui.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -29,7 +28,6 @@ import com.example.data.Goal
 import com.example.ui.viewmodels.LedgerViewModel
 import com.example.utils.FormatUtils
 import kotlin.math.max
-
 
 @Composable
 fun ReportScreen(viewModel: LedgerViewModel, onNavigateToMissingKm: () -> Unit) {
@@ -464,3 +462,7 @@ fun GoalSettingDialog(
         }
     )
 }
+"""
+
+with open("app/src/main/java/com/example/ui/screens/ReportScreen.kt", "w") as f:
+    f.write(content)

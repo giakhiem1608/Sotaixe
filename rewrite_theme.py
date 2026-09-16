@@ -1,4 +1,4 @@
-package com.example.ui.screens
+content = """package com.example.ui.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -14,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -81,7 +80,7 @@ fun ThemeSettingsSheet(
                                     Text(
                                         preset.name, 
                                         fontWeight = FontWeight.Bold,
-                                        color = if (color.luminance() > 0.5f) Color(0xFF0F172A) else Color.White
+                                        color = if (androidx.compose.ui.graphics.luminance(color) > 0.5f) Color(0xFF0F172A) else Color.White
                                     )
                                 }
                             }
@@ -173,3 +172,7 @@ fun CustomColorPicker(
         }
     }
 }
+"""
+
+with open("app/src/main/java/com/example/ui/screens/ThemeSettingsScreen.kt", "w") as f:
+    f.write(content)

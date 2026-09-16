@@ -24,15 +24,9 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
     }
 
     val themeManager = ThemeManager(repository.sharedPreferences)
-    val cardBgColor = themeManager.cardBgColor
-    val incomeColor = themeManager.incomeColor
-    val revenueColor = themeManager.revenueColor
-    val expenseColor = themeManager.expenseColor
-    val tipColor = themeManager.tipColor
+    val primaryColorHex = themeManager.primaryColorHex
+    val heroBgColorHex = themeManager.heroBgColorHex
 
-    fun updateCardColors(bgHex: String, incomeHex: String, revHex: String, expHex: String, tipHex: String = "") {
-        themeManager.setCardColors(bgHex, incomeHex, revHex, expHex, tipHex)
-    }
     
     // Current selected date for Today screen (default to today)
     private val _currentDate = MutableStateFlow(System.currentTimeMillis())
@@ -147,6 +141,7 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
                 RevenueEntry(
                     sourceId = sourceId,
                     amount = amount,
+                    tipAmount = tipAmount ?: 0L,
                     trips = trips,
                     durationHrs = duration,
                     distanceKm = distance,
@@ -420,15 +415,9 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
 
 class LedgerViewModelFactory(private val repository: LedgerRepository) : ViewModelProvider.Factory {
     val themeManager = ThemeManager(repository.sharedPreferences)
-    val cardBgColor = themeManager.cardBgColor
-    val incomeColor = themeManager.incomeColor
-    val revenueColor = themeManager.revenueColor
-    val expenseColor = themeManager.expenseColor
-    val tipColor = themeManager.tipColor
+    val primaryColorHex = themeManager.primaryColorHex
+    val heroBgColorHex = themeManager.heroBgColorHex
 
-    fun updateCardColors(bgHex: String, incomeHex: String, revHex: String, expHex: String, tipHex: String = "") {
-        themeManager.setCardColors(bgHex, incomeHex, revHex, expHex, tipHex)
-    }
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(LedgerViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
