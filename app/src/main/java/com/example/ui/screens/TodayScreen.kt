@@ -319,6 +319,13 @@ fun AddRevenueSheet(
         var distanceStr by remember { mutableStateOf("") }
         var note by remember { mutableStateOf("") }
 
+        val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+        val isKeyboardOpen = WindowInsets.ime.getBottom(androidx.compose.ui.platform.LocalDensity.current) > 0
+        
+        androidx.activity.compose.BackHandler(enabled = isKeyboardOpen) {
+            keyboardController?.hide()
+        }
+
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp).padding(bottom = 32.dp).imePadding().verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(20.dp)
@@ -446,6 +453,13 @@ fun AddExpenseSheet(
         var selectedCategoryId by remember { mutableStateOf(categories.firstOrNull()?.id ?: 0) }
         var amountStr by remember { mutableStateOf("") }
         var note by remember { mutableStateOf("") }
+        
+        val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+        val isKeyboardOpen = WindowInsets.ime.getBottom(androidx.compose.ui.platform.LocalDensity.current) > 0
+        
+        androidx.activity.compose.BackHandler(enabled = isKeyboardOpen) {
+            keyboardController?.hide()
+        }
         
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp).padding(bottom = 32.dp).imePadding().verticalScroll(rememberScrollState()),

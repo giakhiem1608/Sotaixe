@@ -39,6 +39,8 @@ class LedgerRepository(private val dao: LedgerDao, val sharedPreferences: Shared
         return dao.getRevenueEntriesByMonth(monthPrefix)
     }
 
+    fun getAllRevenueEntriesFlow(): Flow<List<RevenueEntry>> = dao.getAllRevenueEntriesFlow()
+
     suspend fun insertRevenueEntry(entry: RevenueEntry) {
         dao.insertRevenueEntry(entry)
     }
@@ -62,6 +64,8 @@ class LedgerRepository(private val dao: LedgerDao, val sharedPreferences: Shared
     fun getExpenseEntriesByMonth(monthPrefix: String): Flow<List<ExpenseEntry>> {
         return dao.getExpenseEntriesByMonth(monthPrefix)
     }
+
+    fun getAllExpenseEntriesFlow(): Flow<List<ExpenseEntry>> = dao.getAllExpenseEntriesFlow()
 
     suspend fun insertExpenseEntry(entry: ExpenseEntry) {
         dao.insertExpenseEntry(entry)

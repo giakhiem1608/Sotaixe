@@ -1,5 +1,5 @@
 {
-  "name": "BA BON",
+  "name": "Sổ Tài Xế",
   "description": "Ứng dụng quản lý doanh thu cho tài xế chạy xe dịch vụ",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

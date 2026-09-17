@@ -77,6 +77,13 @@ class LedgerViewModel(private val repository: LedgerRepository) : ViewModel() {
         rev + tip - exp
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0L)
 
+    
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val allRevenueEntries: StateFlow<List<RevenueEntry>> = repository.getAllRevenueEntriesFlow().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val allExpenseEntries: StateFlow<List<ExpenseEntry>> = repository.getAllExpenseEntriesFlow().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     // Current Month data for Report/Goals
     private val _currentMonth = MutableStateFlow(FormatUtils.formatDbMonth(System.currentTimeMillis()))
     val currentMonth: StateFlow<String> = _currentMonth.asStateFlow()

@@ -1,13 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="24"
-    android:viewportHeight="24">
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M18.92,6.01C18.72,5.42 18.16,5 17.5,5H6.5C5.84,5 5.28,5.42 5.08,6.01L3,12V20C3,20.55 3.45,21 4,21H5C5.55,21 6,20.55 6,20V19H18V20C18,20.55 18.45,21 19,21H20C20.55,21 21,20.55 21,20V12L18.92,6.01ZM6.85,7H17.14L18.22,10.24H5.77L6.85,7ZM19,17H5V12H19V17ZM7.5,16C8.33,16 9,15.33 9,14.5C9,13.67 8.33,13 7.5,13C6.67,13 6,13.67 6,14.5C6,15.33 6.67,16 7.5,16ZM16.5,16C17.33,16 18,15.33 18,14.5C18,13.67 17.33,13 16.5,13C15.67,13 15,13.67 15,14.5C15,15.33 15.67,16 16.5,16Z"/>
-    <!-- Wallet/Money symbol on top -->
-    <path
-        android:fillColor="#0A7B66"
-        android:pathData="M11.8,9.5L10,9.5L10,10.5L13,10.5L13,12.5C13,13 12.6,13.5 12,13.5L11,13.5L11,14.5L10,14.5L10,13.5L9,13.5L9,12L10.8,12L12.5,12L12.5,11L9.5,11C9,11 8.5,10.6 8.5,10L8.5,8C8.5,7.4 9,7 9.5,7L11,7L11,6L12,6L12,7L13,7L13,8.5L11.8,8.5L11.8,9.5Z" />
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <group android:scaleX="0.8" android:scaleY="0.8" android:translateX="10.8" android:translateY="10.8">
+        <!-- Notebook / Ledger Shape -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M32,20 h44 c4.4,0 8,3.6 8,8 v52 c0,4.4 -3.6,8 -8,8 h-44 c-4.4,0 -8,-3.6 -8,-8 v-52 c0,-4.4 3.6,-8 8,-8 z" />
+            
+        <!-- Steering wheel in the center -->
+        <path
+            android:fillColor="#0284C7"
+            android:pathData="M54,40 c-7.73,0 -14,6.27 -14,14 c0,7.73 6.27,14 14,14 c7.73,0 14,-6.27 14,-14 c0,-7.73 -6.27,-14 -14,-14 z m0,24 c-5.52,0 -10,-4.48 -10,-10 c0,-5.52 4.48,-10 10,-10 c5.52,0 10,4.48 10,10 c0,5.52 -4.48,10 -10,10 z" />
+        
+        <path
+            android:fillColor="#0284C7"
+            android:pathData="M54,44 c-5.52,0 -10,4.48 -10,10 h4 c0,-3.31 2.69,-6 6,-6 v-4 z" />
+    </group>
 </vector>

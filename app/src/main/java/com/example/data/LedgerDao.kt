@@ -42,6 +42,9 @@ interface LedgerDao {
     @Query("SELECT * FROM revenue_entries WHERE dateString LIKE :monthPrefix || '%'")
     fun getRevenueEntriesByMonth(monthPrefix: String): Flow<List<RevenueEntry>>
 
+    @Query("SELECT * FROM revenue_entries ORDER BY timestamp DESC")
+    fun getAllRevenueEntriesFlow(): Flow<List<RevenueEntry>>
+
     @Insert
     suspend fun insertRevenueEntry(entry: RevenueEntry)
 
@@ -62,6 +65,9 @@ interface LedgerDao {
 
     @Query("SELECT * FROM expense_entries WHERE dateString LIKE :monthPrefix || '%'")
     fun getExpenseEntriesByMonth(monthPrefix: String): Flow<List<ExpenseEntry>>
+
+    @Query("SELECT * FROM expense_entries ORDER BY timestamp DESC")
+    fun getAllExpenseEntriesFlow(): Flow<List<ExpenseEntry>>
 
     @Insert
     suspend fun insertExpenseEntry(entry: ExpenseEntry)
